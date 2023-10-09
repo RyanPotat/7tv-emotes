@@ -1,4 +1,6 @@
-import fs from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { Postgres } from './database/Postgres.js';
 import { RedisClient } from './database/Redis.js';
 import { Logger } from './utility/Logger.js';
@@ -8,10 +10,13 @@ import { ChannelEmoteManager } from './manager/ChannlEmoteManager.js';
 import { Cronjob } from './utility/Cronjob.js';
 import { IVR } from './services/IVR.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const configPath = path.resolve(__dirname, 'config.json');
+
 // @ts-ignore
 global.Bot = {};
 // @ts-ignore
-Bot.Config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+Bot.Config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
 // @ts-ignore
 Bot.Logger = Logger.New();
 // @ts-ignore
@@ -57,7 +62,7 @@ Bot.Cronjob = Cronjob.New();
 			await new Promise((resolve) => setTimeout(resolve, 8));
 			Bot.Twitch.Join(channel);
 		}
-		
+
 		for (const channelId of Bot.Config.Admins) {
 			try {
 				const data = await IVR(channelId, true);

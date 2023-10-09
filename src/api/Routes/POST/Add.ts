@@ -1,5 +1,5 @@
 import Express from 'express';
-import { ChannelHandler } from '../../../handler/ChannelHandler';
+import { ChannelHandler } from '../../../handler/ChannelHandler.js';
 
 const Router = Express.Router();
 

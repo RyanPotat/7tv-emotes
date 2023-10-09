@@ -72,8 +72,8 @@ export async function GetChannelsGQL(channelIds: string): Promise<IEmoteSet | nu
 export const GetChannels = async (channelIds: string[]): Promise<IEmoteSet[]> => {
 	const promise: Promise<IEmoteSet | null>[] = [];
 
-	if(!channelIds.length) return [];
-	
+	if (!channelIds.length) return [];
+
 	for (const channelId of channelIds) {
 		// @ts-ignore;
 		promise.push(GetChannelsGQL(channelId));

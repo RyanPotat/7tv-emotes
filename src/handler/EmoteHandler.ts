@@ -4,18 +4,15 @@ export async function EmoteHandler(msg: PrivmsgMessage): Promise<void> {
 	const get = (await Bot.Redis.getArray(`emotes:${msg.channelID}`)) ?? [];
 	const emotesUsedByNames: Record<string, [string, string, number]> = {};
 
-	for (const word of msg.messageText.split(/\s/g)) {
-		for (const emote of get) {
-			if (emote.name === word) {
-				if (!(word in emotesUsedByNames)) {
-					emotesUsedByNames[word] = [emote.alias, emote.id, 1];
-					continue;
-				}
-
-				emotesUsedByNames[word][2]++;
+	msg.messageText.split(/\s/g).forEach((word) => {
+		get.forEach((emote) => {
+			const emoteName = emote.alias === emote.name ? emote.name : emote.alias;
+			if (emoteName === word) {
+				emotesUsedByNames[emote.name] ||= [emote.alias, emote.id, 0];
+				emotesUsedByNames[emote.name][2]++;
 			}
-		}
-	}
+		});
+	});
 
 	if (Object.entries(emotesUsedByNames).length > 0) {
 		for (const [name, [alias, id, count]] of Object.entries(emotesUsedByNames)) {

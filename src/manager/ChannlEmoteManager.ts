@@ -5,7 +5,7 @@ export async function ChannelEmoteManager(mapped: IEmoteSet[]): Promise<IChannel
 	let count: number = 0;
 	let channelsToJoin: string[] = [];
 
-	if(!mapped.length) return { count, channelsToJoin }
+	if (!mapped.length) return { count, channelsToJoin };
 
 	for (const { id, username, emote_sets } of mapped) {
 		if (!emote_sets || !emote_sets.emotes) {

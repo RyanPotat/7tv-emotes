@@ -96,7 +96,7 @@ export class Postgres {
 			`INSERT INTO emotes (twitch_id, emote, emote_alias, emote_id)
 			     VALUES ($1, $2, $3, $4)
 			     ON CONFLICT (twitch_id, emote_id)
-			     DO UPDATE SET emote_alias = $3 WHERE emotes.id = $4`,
+			     DO UPDATE SET emote_alias = $3 WHERE emotes.emote_id = $4`,
 			[channelId, name, alias, id],
 		);
 

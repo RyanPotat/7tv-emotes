@@ -1,21 +1,27 @@
 ### What is this?
 
-The purpose for this is track 7tv emote usage.
+The purpose for this is track 7TV emote usage.
+
+## Setting up Config
+
+This is configured using a config file. Duplicate the `config_template.json` file, move it to `/src` and rename it to `config.json`, then replace the necessary values.
+
+<strong><code>config_template.json</code></strong> -> <strong><code>config.json</code></strong>
 
 ### API
 
 ```
-GET https://api.kattah.me/c/xqc
-GET https://api.kattah.me/c/xqc?limit=10
+GET https://7tv.markzynk.com/c/xqc
+GET https://7tv.markzynk.com/c/xqc?limit=10
 
-GET https://api.kattah.me/global
-GET https://api.kattah.me/top
+GET https://7tv.markzynk.com/global
+GET https://7tv.markzynk.com/top
 ```
 
 ### Websocket
 
 ```
-wss://stats-ws.kattah.me
+wss://7tv-ws.markzynk.com
 
 You will have 30 seconds to send a message to the server, otherwise the connection will be closed.
 ```

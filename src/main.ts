@@ -6,7 +6,7 @@ import { RedisClient } from './database/Redis.js';
 import { Logger } from './utility/Logger.js';
 import { ChatClient } from './services/TwitchClient.js';
 import { WebsocketServer } from './manager/WebSocketManager.js';
-import { ChannelEmoteManager } from './manager/ChannlEmoteManager.js';
+import { ChannelEmoteManager } from './manager/ChannelEmoteManager.js';
 import { Cronjob } from './utility/Cronjob.js';
 import { IVR } from './services/IVR.js';
 

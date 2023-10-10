@@ -25,8 +25,8 @@ export async function ChannelEmoteManager(mapped: IEmoteSet[]): Promise<IChannel
 		}
 
 		Bot.Logger.Debug(`${emotesListed.length} Emotes Loaded in ${username} (${id})`);
-		await Bot.Redis.setArray(`emotes:${id}`, emotesListed);
-		await Bot.SQL.EmoteLooper(emote_sets.emotes, id, username);
+		Bot.Redis.setArray(`emotes:${id}`, emotesListed);
+		Bot.SQL.EmoteLooper(emote_sets.emotes, id, username);
 
 		channelsToJoin.push(username);
 		count++;

@@ -54,15 +54,6 @@ Bot.Cronjob = Cronjob.New();
 	});
 
 	async function Init() {
-		const { result, length } = await Bot.SQL.GetChannelsArray();
-		let perfomanceTime: number = performance.now();
-		let { count, channelsToJoin } = await ChannelEmoteManager(result);
-
-		for (const channel of channelsToJoin) {
-			await new Promise((resolve) => setTimeout(resolve, 8));
-			Bot.Twitch.Join(channel);
-		}
-
 		for (const channelId of Bot.Config.Admins) {
 			try {
 				const data = await IVR(channelId, true);
@@ -71,6 +62,12 @@ Bot.Cronjob = Cronjob.New();
 				Bot.Logger.Error(`Failed to join admin channel: ${channelId}`);
 			}
 		}
+		
+		const { result, length } = await Bot.SQL.GetChannelsArray();
+		let perfomanceTime: number = performance.now();
+		let { count } = await ChannelEmoteManager(result);
+
+
 		let tookTime = performance.now() - perfomanceTime;
 		Bot.Logger.Log(`Emotes updated for ${count}/${length} channels, took ${tookTime}ms`);
 	}

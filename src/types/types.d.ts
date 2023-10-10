@@ -42,5 +42,4 @@ export type UpdateEmote = {
 
 export type IChannels = {
 	count: number;
-	channelsToJoin: string[];
 };

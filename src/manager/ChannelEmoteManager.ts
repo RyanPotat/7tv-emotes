@@ -3,9 +3,8 @@ import type { IChannels } from '../types/types.js';
 
 export async function ChannelEmoteManager(mapped: IEmoteSet[]): Promise<IChannels> {
 	let count: number = 0;
-	let channelsToJoin: string[] = [];
 
-	if (!mapped.length) return { count, channelsToJoin };
+	if (!mapped.length) return { count };
 
 	for (const { id, username, emote_sets } of mapped) {
 		if (!emote_sets || !emote_sets.emotes) {
@@ -27,10 +26,9 @@ export async function ChannelEmoteManager(mapped: IEmoteSet[]): Promise<IChannel
 		Bot.Logger.Debug(`${emotesListed.length} Emotes Loaded in ${username} (${id})`);
 		Bot.Redis.setArray(`emotes:${id}`, emotesListed);
 		Bot.SQL.EmoteLooper(emote_sets.emotes, id, username);
-
-		channelsToJoin.push(username);
+		Bot.Twitch.Join(username);
 		count++;
 	}
 
-	return { count, channelsToJoin };
+	return { count };
 }

@@ -31,7 +31,8 @@ export type NewEmote = {
 };
 
 export type UpdateEmote = {
-	dbEmote: string;
+	dbName: string;
+	dbAlias: string;
 	name: string;
 	alias: string | null;
 	id: string;

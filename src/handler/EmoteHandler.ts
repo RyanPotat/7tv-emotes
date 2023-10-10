@@ -15,8 +15,8 @@ export async function EmoteHandler(msg: PrivmsgMessage): Promise<void> {
 	});
 
 	if (Object.entries(emotesUsedByNames).length > 0) {
-		for (const [name, [alias, id, count]] of Object.entries(emotesUsedByNames)) {
-			const emoteAlias = name == alias ? null : alias;
+		for (const [name, [emoteAlias, id, count]] of Object.entries(emotesUsedByNames)) {
+			const alias = name == emoteAlias ? null : emoteAlias;
 			await Bot.SQL.Query(`UPDATE emotes SET emote_count = emotes.emote_count + $1 WHERE emotes.twitch_id = $2 AND emotes.emote_id = $3`, [
 				count,
 				msg.channelID,
@@ -31,7 +31,7 @@ export async function EmoteHandler(msg: PrivmsgMessage): Promise<void> {
 				senderId: msg.senderUserID,
 				data: {
 					name,
-					alias: emoteAlias,
+					alias,
 					id,
 					count,
 				},

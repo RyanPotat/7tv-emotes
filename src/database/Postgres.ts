@@ -91,16 +91,17 @@ export class Postgres {
 	}
 
 	async UpdateEmote(emotes: UpdateEmote): Promise<void> {
-		const { dbEmote, name, alias, id, channelId, channelName } = emotes;
+		const { dbName, dbAlias, name, alias, id, channelId, channelName } = emotes;
 		await Bot.SQL.Query(
 			`INSERT INTO emotes (twitch_id, emote, emote_alias, emote_id)
 			     VALUES ($1, $2, $3, $4)
 			     ON CONFLICT (twitch_id, emote_id)
-			     DO UPDATE SET emote_alias = $3 WHERE emotes.emote_id = $4`,
+			     DO UPDATE SET emote = $2, emote_alias = $3 WHERE emotes.emote_id = $4`,
 			[channelId, name, alias, id],
 		);
 
-		Bot.Logger.Debug(`Emote name changed ${dbEmote} -> ${name} in ${channelName}`);
+		if (dbName != name) Bot.Logger.Debug(`Emote name changed ${dbName} -> ${name} in ${channelName}`);
+		if (dbAlias != alias) Bot.Logger.Debug(`Emote alias changed ${dbAlias} -> ${alias} in ${channelName}`);
 	}
 
 	async EmoteLooper(emoteList: IEmote[], twitch_id: string, twitch_username: string): Promise<void> {
@@ -120,10 +121,11 @@ export class Postgres {
 			}
 
 			const { emote, emote_alias, emote_id } = getEmote.rows[0];
-			if (emote_alias === emoteAlias && emote_id === emoteInfo.id) continue;
+			if (emote === emoteInfo.data.name && emote_alias === emoteAlias && emote_id === emoteInfo.id) continue;
 
 			const Payload = {
-				dbEmote: emote,
+				dbName: emote,
+				dbAlias: emote_alias,
 				name: emoteInfo.data.name,
 				alias: emoteAlias,
 				id: emoteInfo.id,

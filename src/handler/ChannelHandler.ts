@@ -45,7 +45,7 @@ export async function ChannelHandler(channel: string) {
 				(twitch_id, emote, emote_alias, emote_id, emote_count)
 				VALUES ($1, $2, $3, $4, $5)
 				ON CONFLICT (twitch_id, emote_id)
-				DO UPDATE SET emote_alias = $3 WHERE emotes.emote_id = $4`,
+				DO UPDATE SET emote = $2, emote_alias = $3 WHERE emotes.emote_id = $4`,
 				[data.id, emote.data.name, emoteAlias, emote.id, 0],
 			);
 		}

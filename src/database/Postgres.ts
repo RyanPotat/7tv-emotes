@@ -121,12 +121,13 @@ export class Postgres {
 			}
 
 			const { emote, emote_alias, emote_id } = getEmote.rows[0];
-			if (emote === emoteInfo.data.name && emote_alias === emoteAlias && emote_id === emoteInfo.id) continue;
+			const emoteName = emoteInfo.data.name == '*UnknownEmote' ? emote : emoteInfo.data.name;
+			if (emote === emoteName && emote_alias === emoteAlias && emote_id === emoteInfo.id) continue;
 
 			const Payload = {
 				dbName: emote,
 				dbAlias: emote_alias,
-				name: emoteInfo.data.name,
+				name: emoteName,
 				alias: emoteAlias,
 				id: emoteInfo.id,
 				channelId: twitch_id,

@@ -39,7 +39,7 @@ Router.get('/c/:username', Limiter(1000, 10), async (req, res) => {
 			name: emote.emote,
 			alias: emote.emote_alias,
 			count: emote.emote_count,
-			added: emote.added,
+			since: emote.added,
 		};
 	});
 

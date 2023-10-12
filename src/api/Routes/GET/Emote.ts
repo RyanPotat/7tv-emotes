@@ -18,8 +18,8 @@ Router.get('/e/:emote', Limiter(1000, 10), async (req, res) => {
 	const emoteData = await Bot.SQL.Query(
 		`SELECT emotes.*, channels.twitch_username, channels.stv_id
 		FROM emotes
-        JOIN channels ON emotes.twitch_id = channels.twitch_id
-        WHERE emotes.emote_id = $1
+		JOIN channels ON emotes.twitch_id = channels.twitch_id
+		WHERE emotes.emote_id = $1
 		ORDER BY emotes.emote_count DESC`,
 		[emote],
 	);
@@ -38,7 +38,7 @@ Router.get('/e/:emote', Limiter(1000, 10), async (req, res) => {
 			stvId: emote.stv_id,
 			alias: emote.emote_alias,
 			count: emote.emote_count,
-			added: emote.added,
+			since: emote.added,
 		};
 	});
 

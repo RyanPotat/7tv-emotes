@@ -45,7 +45,7 @@ Router.get('/c/:username', Limiter(1000, 10), async (req, res) => {
 
 	return res.status(200).json({
 		success: true,
-		user: {
+		channel: {
 			id: channelData.rows[0].twitch_id,
 			login: channelData.rows[0].twitch_username,
 			stvId: channelData.rows[0].stv_id,

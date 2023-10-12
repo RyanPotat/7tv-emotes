@@ -62,11 +62,10 @@ Bot.Cronjob = Cronjob.New();
 				Bot.Logger.Error(`Failed to join admin channel: ${channelId}`);
 			}
 		}
-		
+
 		const { result, length } = await Bot.SQL.GetChannelsArray();
 		let perfomanceTime: number = performance.now();
 		let { count } = await ChannelEmoteManager(result);
-
 
 		let tookTime = performance.now() - perfomanceTime;
 		Bot.Logger.Log(`Emotes updated for ${count}/${length} channels, took ${tookTime}ms`);

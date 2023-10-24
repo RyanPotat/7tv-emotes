@@ -8,7 +8,7 @@ export async function IVR(channel: string, type?: boolean): Promise<IVR | null> 
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
-				'User-Agent': 'IF YOU SEE THIS VI VON ZULUL',
+				'User-Agent': 'markzynk/7tv-emotes',
 			},
 		}).then((res) => res.json())) as IVR[];
 

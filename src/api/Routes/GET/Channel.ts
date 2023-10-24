@@ -1,5 +1,6 @@
 import Express from 'express';
 import { Limiter } from '../../Middleware/RateLimit.js';
+import { IVR } from '../../../services/IVR.js';
 const Router = Express.Router();
 
 type Emote = {
@@ -13,17 +14,25 @@ type Emote = {
 Router.get('/c/:username', Limiter(1000, 10), async (req, res) => {
 	let { username } = req.params;
 	const limit = req.query.limit || null;
-	username = username.toLowerCase();
 
-	const channelData = await Bot.SQL.Query(`SELECT * FROM channels WHERE twitch_username = $1`, [username]);
+	const data = await IVR(username);
+
+	if (!data || !data.id) {
+		return res.status(404).json({
+			success: false,
+			message: 'Channel not found',
+		});
+	}
+
+	const channelData = await Bot.SQL.Query(`SELECT * FROM channels WHERE twitch_id = $1`, [data.id]);
 	const channelEmotes = await Bot.SQL.Query(
 		`SELECT emotes.* 
 		FROM emotes 
 	    INNER JOIN channels 
 	    ON channels.twitch_id = emotes.twitch_id 
-	    WHERE channels.twitch_username = $1
+	    WHERE channels.twitch_id = $1
 		ORDER BY emotes.emote_count DESC`,
-		[username],
+		[data.id],
 	);
 
 	if (channelEmotes.rowCount === 0 || channelData.rowCount === 0) {
@@ -47,7 +56,7 @@ Router.get('/c/:username', Limiter(1000, 10), async (req, res) => {
 		success: true,
 		channel: {
 			id: channelData.rows[0].twitch_id,
-			login: channelData.rows[0].twitch_username,
+			login: data.login,
 			stvId: channelData.rows[0].stv_id,
 			since: channelData.rows[0].tracking_since,
 			tracking: channelData.rows[0].tracking,

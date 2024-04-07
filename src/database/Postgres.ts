@@ -100,8 +100,8 @@ export class Postgres {
 			[channelId, name, alias, id],
 		);
 
-		if (dbName != name) Bot.Logger.Debug(`Emote name changed ${dbName} -> ${name} in ${channelName}`);
-		if (dbAlias != alias) Bot.Logger.Debug(`Emote alias changed ${dbAlias} -> ${alias} in ${channelName}`);
+		if (dbName !== name) Bot.Logger.Debug(`Emote name changed ${dbName} -> ${name} in ${channelName}`);
+		if (dbAlias !== alias) Bot.Logger.Debug(`Emote alias changed ${dbAlias} -> ${alias} in ${channelName}`);
 	}
 
 	async EmoteLooper(emoteList: IEmote[], twitch_id: string, twitch_username: string): Promise<void> {

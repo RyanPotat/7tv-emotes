@@ -61,7 +61,7 @@ Router.get('/c/:username', Limiter(1000, 10), async (req, res) => {
 			since: channelData.rows[0].tracking_since,
 			tracking: channelData.rows[0].tracking,
 		},
-		emotes: limit == null ? emotes : emotes.slice(0, limit),
+		emotes: limit === null ? emotes : emotes.slice(0, +limit),
 	});
 });
 

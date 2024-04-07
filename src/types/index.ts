@@ -1,12 +1,12 @@
 export interface IChannels {
-	result: IEmoteSet[];
+	result: I7tvUser[];
 	length: number;
 }
 
-export interface IEmoteSet {
+export interface I7tvUser {
 	id: string;
 	username: string;
-	emote_sets: {
+	emote_set: {
 		id: string;
 		name: string;
 		capacity: number;

@@ -103,8 +103,8 @@ export class Logger {
 		this.winstonLogger.log(LogLevel.DEBUG, message, { module });
 	}
 
-	Error(message: string, module?: string) {
-		this.winstonLogger.log(LogLevel.ERROR, message, { module });
+	Error(message: string | Error, module?: string) {
+		this.winstonLogger.log(LogLevel.ERROR, String(message), { module });
 	}
 
 	Warn(message: string, module?: string) {

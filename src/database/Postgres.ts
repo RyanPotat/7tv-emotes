@@ -1,6 +1,6 @@
 import pkg, { QueryResult } from 'pg';
 import type { NewEmote, UpdateEmote } from '../types/types.js';
-import type { IEmote, IChannels, I7tvUser } from '../types/index.js';
+import type { I7tvUser, IChannel } from '../types/index.js';
 
 interface IPool extends pkg.Pool {}
 
@@ -80,13 +80,21 @@ export class Postgres {
 		)`);
 	}
 
-	async UpdateCurrentSet(channel: I7tvUser) {
-		await this.Query(
-			`UPDATE channels
-				 SET current_stv_set = $1
-				 WHERE twitch_id = $2`,
-			[channel.emote_set.id, channel.id],
-		);
+	async UpdateChannelsSets(channels: I7tvUser[]) {
+		const updateRequests = [];
+
+		for (const channel of channels) {
+			updateRequests.push(
+				await this.Query(
+					`UPDATE channels
+					 SET current_stv_set = $1
+					 WHERE twitch_id = $2`,
+					[channel.emote_set.id, channel.id],
+				),
+			);
+		}
+
+		await Promise.all(updateRequests);
 	}
 
 	async NewEmote(twitch_id: string, twitch_name: string, emote: NewEmote): Promise<void> {
@@ -114,8 +122,8 @@ export class Postgres {
 		if (dbAlias !== alias) Bot.Logger.Debug(`Emote alias changed ${dbAlias} -> ${alias} in ${channelName}`);
 	}
 
-	async GetChannelsArray(): Promise<{ logins: string[]; stv_ids: string[] }> {
-		const Channels = await this.Query('SELECT array_agg(twitch_username) as logins, array_agg(stv_id) as stv_ids FROM channels');
-		return Channels.rows[0];
+	async GetChannels(): Promise<IChannel[]> {
+		const Channels = await this.Query('SELECT * FROM channels');
+		return Channels.rows;
 	}
 }

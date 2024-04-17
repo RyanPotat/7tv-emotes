@@ -9,7 +9,7 @@ import { WebsocketServer } from './manager/WebSocketManager.js';
 import { ChannelEmoteManager } from './manager/ChannelEmoteManager.js';
 import { Cronjob } from './utility/Cronjob.js';
 import { IVR } from './services/IVR.js';
-import { GetChannels } from './services/SevenTV.js';
+import { GetChannelsInfo } from './services/SevenTV.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const configPath = path.resolve(__dirname, 'config.json');
@@ -54,7 +54,7 @@ Bot.Cronjob = Cronjob.New();
 		process.kill(process.pid, 'SIGUSR2');
 	});
 
-	const joinChannels = async (): Promise<string[]> => {
+	const joinChannels = async (): Promise<void> => {
 		for (const channelId of Bot.Config.Admins) {
 			try {
 				const data = await IVR(channelId, true);
@@ -64,30 +64,29 @@ Bot.Cronjob = Cronjob.New();
 			}
 		}
 
-		const { logins, stv_ids } = await Bot.SQL.GetChannelsArray();
-		for (const channel of logins) {
+		const channels = await Bot.SQL.GetChannels();
+		for (const channel of channels) {
 			try {
-				Bot.Twitch.Join(channel);
+				Bot.Twitch.Join(channel.twitch_username);
 			} catch (e) {
-				Bot.Logger.Error(`Failed to join channel: ${channel}`);
+				Bot.Logger.Error(`Failed to join channel.login: ${channel}`);
 			}
 		}
-
-		return stv_ids;
 	};
 
 	const Init = async () => {
-		const stv_ids = await joinChannels();
+		await joinChannels();
 
 		const perfomanceTime: number = performance.now();
 		// When we start the bot we want to get all the 7tv information in case we missed anything from EventAPI
-		const channelsInfo = await GetChannels(stv_ids);
+		const channelsInfo = await GetChannelsInfo();
 
 
+		await Bot.SQL.UpdateChannelsSets(channelsInfo);
 		const count = await ChannelEmoteManager(channelsInfo);
 
 		const tookTime = performance.now() - perfomanceTime;
-		Bot.Logger.Log(`Emotes updated for ${count}/${stv_ids.length} channels, took ${tookTime}ms`);
+		Bot.Logger.Log(`Emotes updated for ${count}/${channelsInfo.length} channels, took ${tookTime}ms`);
 	};
 
 	await Init();

@@ -68,7 +68,10 @@ export async function GetChannelGQL(stv_ids: string): Promise<I7tvUser | null> {
 	}
 }
 
-export const GetChannels = async (channelIds: string[]): Promise<I7tvUser[]> => {
+export const GetChannelsInfo = async (): Promise<I7tvUser[]> => {
+	const channels = await Bot.SQL.GetChannels();
+	const channelIds = channels.map((c) => c.stv_id);
+
 	const requests: Promise<I7tvUser | null>[] = [];
 
 	for (const channelId of channelIds ?? []) {
@@ -77,14 +80,6 @@ export const GetChannels = async (channelIds: string[]): Promise<I7tvUser[]> => 
 	}
 
 	const results = (await Promise.all(requests)).filter(Boolean) as I7tvUser[];
-
-	const updateRequests = [];
-
-	for (const channel of results) {
-		updateRequests.push(Bot.SQL.UpdateCurrentSet(channel));
-	}
-
-	await Promise.all(updateRequests);
 
 	return results;
 };

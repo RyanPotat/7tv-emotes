@@ -15,6 +15,16 @@ export interface I7tvUser {
 	};
 }
 
+export interface IChannel {
+	id: number;
+	twitch_username: string;
+	twitch_id: string;
+	stv_id: string;
+	tracking_since: Date;
+	tracking: boolean;
+	current_stv_set: string;
+}
+
 export interface IEmote {
 	name: string;
 	id: string;

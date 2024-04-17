@@ -4,6 +4,7 @@ export interface IChannels {
 }
 
 export interface I7tvUser {
+	// twitch id
 	id: string;
 	username: string;
 	emote_set: {

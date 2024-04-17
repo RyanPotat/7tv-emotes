@@ -104,42 +104,6 @@ export class Postgres {
 		if (dbAlias !== alias) Bot.Logger.Debug(`Emote alias changed ${dbAlias} -> ${alias} in ${channelName}`);
 	}
 
-	async EmoteLooper(emoteList: IEmote[], twitch_id: string, twitch_username: string): Promise<void> {
-		Bot.Logger.Warn(`Updating emotes for ${twitch_username}...`);
-
-		for (const emoteInfo of emoteList) {
-			const getEmote = await Bot.SQL.Query(`SELECT emote, emote_id FROM emotes WHERE twitch_id = $1 AND emote_id = $2`, [
-				twitch_id,
-				emoteInfo.id,
-			]);
-
-			const emoteAlias = emoteInfo.name == emoteInfo.data.name ? null : emoteInfo.name;
-
-			if (getEmote.rowCount === 0) {
-				await this.NewEmote(twitch_id, twitch_username, { name: emoteInfo.data.name, alias: emoteAlias, id: emoteInfo.id });
-				continue;
-			}
-
-			const { emote, emote_alias, emote_id } = getEmote.rows[0];
-			const emoteName = emoteInfo.data.name == '*UnknownEmote' ? emote : emoteInfo.data.name;
-			if (emote === emoteName && emote_alias === emoteAlias && emote_id === emoteInfo.id) continue;
-
-			const Payload = {
-				dbName: emote,
-				dbAlias: emote_alias,
-				name: emoteName,
-				alias: emoteAlias,
-				id: emoteInfo.id,
-				channelId: twitch_id,
-				channelName: twitch_username,
-			};
-
-			await this.UpdateEmote(Payload);
-		}
-
-		Bot.Logger.Log(`Updated emotes for ${twitch_username}`);
-	}
-
 	async GetChannelsArray(): Promise<IChannels> {
 		const Channels = await this.Query('SELECT array_agg(stv_id) as stv_ids FROM channels');
 		const { stv_ids } = Channels?.rows[0];

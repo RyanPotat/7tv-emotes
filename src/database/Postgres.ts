@@ -1,7 +1,6 @@
-import pkg from 'pg';
-import { GetChannels } from '../services/SevenTV.js';
+import pkg, { QueryResult } from 'pg';
 import type { NewEmote, UpdateEmote } from '../types/types.js';
-import type { IEmote, IChannels } from '../types/index.js';
+import type { IEmote, IChannels, I7tvUser } from '../types/index.js';
 
 interface IPool extends pkg.Pool {}
 
@@ -27,7 +26,7 @@ export class Postgres {
 		return this._instance;
 	}
 
-	async Query(query: string, values?: any[]): Promise<any> {
+	async Query(query: string, values?: any[]): Promise<QueryResult<any>> {
 		return this._pool.query(query, values);
 	}
 
@@ -64,6 +63,7 @@ export class Postgres {
 			twitch_username TEXT NOT NULL,
 			twitch_id VARCHAR(30) NOT NULL UNIQUE,
 			stv_id VARCHAR(30) NOT NULL UNIQUE,
+			current_stv_set VARCHAR(30) NOT NULL UNIQUE,
 			tracking_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 			tracking BOOLEAN DEFAULT TRUE NOT NULL
 		)`);
@@ -80,10 +80,20 @@ export class Postgres {
 		)`);
 	}
 
+	async UpdateCurrentSet(channel: I7tvUser) {
+		await this.Query(
+			`UPDATE channels
+				 SET current_stv_set = $1
+				 WHERE twitch_id = $2`,
+			[channel.emote_set.id, channel.id],
+		);
+	}
+
 	async NewEmote(twitch_id: string, twitch_name: string, emote: NewEmote): Promise<void> {
 		await this.Query(
 			`INSERT INTO emotes (twitch_id, emote, emote_alias, emote_id) 
-			 VALUES ($1, $2, $3, $4)`,
+			 VALUES ($1, $2, $3, $4)
+			 ON CONFLICT DO NOTHING`,
 			[twitch_id, emote.name, emote.alias, emote.id],
 		);
 
@@ -104,14 +114,8 @@ export class Postgres {
 		if (dbAlias !== alias) Bot.Logger.Debug(`Emote alias changed ${dbAlias} -> ${alias} in ${channelName}`);
 	}
 
-	async GetChannelsArray(): Promise<IChannels> {
-		const Channels = await this.Query('SELECT array_agg(stv_id) as stv_ids FROM channels');
-		const { stv_ids } = Channels?.rows[0];
-		const result = await GetChannels(stv_ids ?? []);
-
-		return {
-			result,
-			length: stv_ids?.length ?? 0,
-		};
+	async GetChannelsArray(): Promise<{ logins: string[]; stv_ids: string[] }> {
+		const Channels = await this.Query('SELECT array_agg(twitch_username) as logins, array_agg(stv_id) as stv_ids FROM channels');
+		return Channels.rows[0];
 	}
 }

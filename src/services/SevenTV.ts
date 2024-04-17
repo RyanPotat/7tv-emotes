@@ -1,9 +1,9 @@
 import fetch from 'node-fetch';
-import type { IEmoteSet, UserData, StvRest } from '../types/index.js';
+import type { I7tvUser, UserData, StvRest } from '../types/index.js';
 
 const GQL = 'https://7tv.io/v3/gql';
 
-export async function GetChannelsGQL(channelIds: string): Promise<IEmoteSet | null> {
+export async function GetChannelGQL(stv_ids: string): Promise<I7tvUser | null> {
 	try {
 		const { data, errors } = (await fetch(GQL, {
 			method: 'POST',
@@ -43,16 +43,15 @@ export async function GetChannelsGQL(channelIds: string): Promise<IEmoteSet | nu
 					}
 				  }`,
 				variables: {
-					id: channelIds,
+					id: stv_ids,
 				},
 			}),
 		}).then((res) => res.json())) as UserData;
 
-		if (errors || !data) return null;
-
-		if (channelIds !== data.user.id) return null;
+		if (errors || !data || stv_ids !== data.user.id) return null;
 
 		const { emote_sets, connections } = data.user;
+
 		const findTwitch = connections.find((connection: { platform: string }) => connection.platform === 'TWITCH');
 		if (!findTwitch) return null;
 
@@ -62,28 +61,32 @@ export async function GetChannelsGQL(channelIds: string): Promise<IEmoteSet | nu
 		return {
 			id: findTwitch.id,
 			username: findTwitch.username,
-			emote_sets: findEmoteSet,
+			emote_set: findEmoteSet,
 		};
 	} catch (e) {
 		return null;
 	}
 }
 
-export const GetChannels = async (channelIds: string[]): Promise<IEmoteSet[]> => {
-	const promise: Promise<IEmoteSet | null>[] = [];
+export const GetChannels = async (channelIds: string[]): Promise<I7tvUser[]> => {
+	const requests: Promise<I7tvUser | null>[] = [];
 
-	if (!channelIds.length) return [];
-
-	for (const channelId of channelIds) {
-		// @ts-ignore;
-		promise.push(GetChannelsGQL(channelId));
+	for (const channelId of channelIds ?? []) {
+		requests.push(GetChannelGQL(channelId));
 		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 
-	const results = await Promise.all(promise);
-	const filtered = results.filter((result) => result !== null) as IEmoteSet[];
+	const results = (await Promise.all(requests)).filter(Boolean) as I7tvUser[];
 
-	return filtered;
+	const updateRequests = [];
+
+	for (const channel of results) {
+		updateRequests.push(Bot.SQL.UpdateCurrentSet(channel));
+	}
+
+	await Promise.all(updateRequests);
+
+	return results;
 };
 
 export const GetStvId = async (channelId: string): Promise<StvRest> => {

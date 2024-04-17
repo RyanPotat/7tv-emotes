@@ -25,7 +25,6 @@ export async function ChannelEmoteManager(mapped: IEmoteSet[]): Promise<IChannel
 
 		Bot.Logger.Debug(`${emotesListed.length} Emotes Loaded in ${username} (${id})`);
 		Bot.Redis.setArray(`emotes:${id}`, emotesListed);
-		Bot.Twitch.Join(username);
 
 		Bot.Logger.Warn(`Updating emotes for ${username}...`);
 		// Loop over emotes from 7tv

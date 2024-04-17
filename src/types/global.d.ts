@@ -11,7 +11,7 @@ declare global {
 		 * EventAPI: import("./services/EventAPI").EventAPI;
 		 * I'll probably need to rewrite this, i've tried EventAPI in the past and it just seems a better option to use REST
 		 */
-		WS: import('../manager/WebSocketManager').Websocket;
+		WS: import('../manager/WebSocketManager').WebsocketServer;
 		Cronjob: import('../utility/Cronjob').Cronjob;
 	};
 }

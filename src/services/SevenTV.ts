@@ -86,14 +86,16 @@ export const GetChannels = async (channelIds: string[]): Promise<IEmoteSet[]> =>
 	return filtered;
 };
 
-export const GetStvId = async (channelId: string): Promise<StvRest | null> => {
+export const GetStvId = async (channelId: string): Promise<StvRest> => {
 	try {
 		const data = (await fetch(`https://7tv.io/v3/users/twitch/${channelId}`, {
 			method: 'GET',
 		}).then((res) => res.json())) as StvRest;
-		if (!data || data.error) return null;
+
+		if (!data || data.error) throw new Error(`Failed to find ${channelId} in 7TV`);
+
 		return data;
 	} catch (e) {
-		return null;
+		throw new Error(`Failed to find ${channelId} in 7TV`);
 	}
 };

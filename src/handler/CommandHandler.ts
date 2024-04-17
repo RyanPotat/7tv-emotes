@@ -10,6 +10,10 @@ export async function CommandHandler(msg: PrivmsgMessage) {
 	const cmd = args.length > 0 ? args.shift()!.toLowerCase() : '';
 
 	if (cmd === '7tvadd' && args[0]) {
-		await ChannelHandler(args[0]);
+		try {
+			await ChannelHandler(args[0]);
+		} catch (error) {
+			Bot.Logger.Error(`An error occurred while adding the channel ${args[0]}: ${error}`);
+		}
 	}
 }

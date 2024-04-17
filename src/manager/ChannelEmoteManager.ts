@@ -11,6 +11,13 @@ export async function ChannelEmoteManager(channels: I7tvUser[]): Promise<number>
 			continue;
 		}
 
+		Bot.SQL.Query(
+			`UPDATE channels
+			 SET current_stv_set = $1
+			 WHERE twitch_id = $2`,
+			[emote_set.id, id],
+		);
+
 		const emotesListed = emote_set.emotes.map((emote: { name: string; id: string; data: { name: string } }) => ({
 			name: emote.data.name,
 			alias: emote.name,

@@ -82,7 +82,6 @@ Bot.Cronjob = Cronjob.New();
 		const channelsInfo = await GetChannelsInfo();
 
 
-		await Bot.SQL.UpdateChannelsSets(channelsInfo);
 		const count = await ChannelEmoteManager(channelsInfo);
 
 		const tookTime = performance.now() - perfomanceTime;

@@ -80,23 +80,6 @@ export class Postgres {
 		)`);
 	}
 
-	async UpdateChannelsSets(channels: I7tvUser[]) {
-		const updateRequests = [];
-
-		for (const channel of channels) {
-			updateRequests.push(
-				await this.Query(
-					`UPDATE channels
-					 SET current_stv_set = $1
-					 WHERE twitch_id = $2`,
-					[channel.emote_set.id, channel.id],
-				),
-			);
-		}
-
-		await Promise.all(updateRequests);
-	}
-
 	async NewEmote(twitch_id: string, twitch_name: string, emote: NewEmote): Promise<void> {
 		await this.Query(
 			`INSERT INTO emotes (twitch_id, emote, emote_alias, emote_id) 

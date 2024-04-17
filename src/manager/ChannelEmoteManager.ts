@@ -1,28 +1,23 @@
-import type { IEmoteSet } from '../types/index.js';
-import type { IChannels } from '../types/types.js';
+import type { I7tvUser } from '../types/index.js';
 
-export async function ChannelEmoteManager(mapped: IEmoteSet[]): Promise<IChannels> {
+export async function ChannelEmoteManager(channels: I7tvUser[]): Promise<number> {
 	let count: number = 0;
 
-	if (!mapped.length) return { count };
+	if (!channels.length) return count;
 
-	for (const { id, username, emote_sets } of mapped) {
-		if (!emote_sets || !emote_sets.emotes) {
+	for (const { id, username, emote_set } of channels) {
+		if (!emote_set || !emote_set.emotes) {
 			Bot.Logger.Warn(`7TV returned no emotes for ${username} (${id})`);
 			continue;
 		}
 
-		const emotesListed = emote_sets.emotes.map((emote: { name: string; id: string; data: { name: string } }) => ({
+		const emotesListed = emote_set.emotes.map((emote: { name: string; id: string; data: { name: string } }) => ({
 			name: emote.data.name,
 			alias: emote.name,
 			id: emote.id,
 		}));
 
-		if (emotesListed.length === 0) {
-			Bot.Logger.Warn(`7TV returned no emotes for ${username} (${id})`);
-			continue;
-		}
-
+		// Add emotes to redis
 		Bot.Logger.Debug(`${emotesListed.length} Emotes Loaded in ${username} (${id})`);
 		Bot.Redis.setArray(`emotes:${id}`, emotesListed);
 
@@ -59,5 +54,5 @@ export async function ChannelEmoteManager(mapped: IEmoteSet[]): Promise<IChannel
 		count++;
 	}
 
-	return { count };
+	return count;
 }

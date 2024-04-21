@@ -34,6 +34,12 @@ export interface IEmote {
 	};
 }
 
+export interface RedisEmote {
+	name: string;
+	alias: string;
+	id: string;
+}
+
 export interface UserData {
 	data: {
 		user: {

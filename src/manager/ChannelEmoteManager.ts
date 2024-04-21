@@ -26,7 +26,7 @@ export async function ChannelEmoteManager(channels: I7tvUser[]): Promise<number>
 
 		// Add emotes to redis
 		Bot.Logger.Debug(`${emotesListed.length} Emotes Loaded in ${username} (${id})`);
-		Bot.Redis.setArray(`emotes:${id}`, emotesListed);
+		Bot.Redis.setEmotes(id, emotesListed);
 
 		Bot.Logger.Warn(`Updating emotes for ${username}...`);
 		// Loop over emotes from 7tv

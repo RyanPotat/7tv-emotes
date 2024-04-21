@@ -27,7 +27,7 @@ export async function ChannelHandler(channel: string) {
 		}));
 		if (emotesListed.length === 0) throw `7TV returned no emotes for ${targetUser} (${data.id})`;
 
-		await Bot.Redis.setArray(`emotes:${data.id}`, emotesListed);
+		await Bot.Redis.setEmotes(data.id, emotesListed);
 		await Bot.SQL.Query(
 			`
 			INSERT INTO channels 

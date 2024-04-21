@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { RedisEmote } from '../types';
 
 export class RedisClient {
 	private static _instance: RedisClient;
@@ -28,8 +29,8 @@ export class RedisClient {
 		await this._client.set(key, value);
 	}
 
-	async setArray(key: string, value: any[]): Promise<void> {
-		await this._client.set(key, JSON.stringify(value));
+	async setEmotes(channelId: string, emotes: RedisEmote[]): Promise<void> {
+		await this._client.set(`emotes:${channelId}`, JSON.stringify(emotes));
 	}
 
 	async get(key: string): Promise<string | null> {
@@ -39,8 +40,8 @@ export class RedisClient {
 		return value;
 	}
 
-	async getArray(key: string): Promise<any[] | null> {
-		const value = await this._client.get(key);
+	async getEmotes(channelId: string): Promise<RedisEmote[] | null> {
+		const value = await this._client.get(`emotes:${channelId}`);
 		if (!value) return null;
 
 		return JSON.parse(value);

@@ -3,7 +3,7 @@ import type { I7tvUser, UserData, StvRest } from '../types/index.js';
 
 const GQL = 'https://7tv.io/v3/gql';
 
-export async function GetChannelGQL(stv_ids: string): Promise<I7tvUser | null> {
+export async function GetChannelGQL(stv_id: string): Promise<I7tvUser | null> {
 	try {
 		const { data, errors } = (await fetch(GQL, {
 			method: 'POST',
@@ -43,12 +43,12 @@ export async function GetChannelGQL(stv_ids: string): Promise<I7tvUser | null> {
 					}
 				  }`,
 				variables: {
-					id: stv_ids,
+					id: stv_id,
 				},
 			}),
 		}).then((res) => res.json())) as UserData;
 
-		if (errors || !data || stv_ids !== data.user.id) return null;
+		if (errors || !data || stv_id !== data.user.id) return null;
 
 		const { emote_sets, connections } = data.user;
 

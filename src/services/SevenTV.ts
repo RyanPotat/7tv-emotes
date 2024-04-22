@@ -59,7 +59,8 @@ export async function GetChannelGQL(stv_id: string): Promise<I7tvUser | null> {
 		if (!findEmoteSet) return null;
 
 		return {
-			id: findTwitch.id,
+			stv_id,
+			twitch_id: findTwitch.id,
 			username: findTwitch.username,
 			emote_set: findEmoteSet,
 		};

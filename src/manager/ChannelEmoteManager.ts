@@ -5,9 +5,9 @@ export async function ChannelEmoteManager(channels: I7tvUser[]): Promise<number>
 
 	if (!channels.length) return count;
 
-	for (const { id, username, emote_set } of channels) {
+	for (const { stv_id, twitch_id, username, emote_set } of channels) {
 		if (!emote_set || !emote_set.emotes) {
-			Bot.Logger.Warn(`7TV returned no emotes for ${username} (${id})`);
+			Bot.Logger.Warn(`7TV returned no emotes for ${username} (${twitch_id})`);
 			continue;
 		}
 
@@ -15,7 +15,7 @@ export async function ChannelEmoteManager(channels: I7tvUser[]): Promise<number>
 			`UPDATE channels
 			 SET current_stv_set = $1
 			 WHERE twitch_id = $2`,
-			[emote_set.id, id],
+			[emote_set.id, twitch_id],
 		);
 
 		const emotesListed = emote_set.emotes.map((emote: { name: string; id: string; data: { name: string } }) => ({
@@ -25,19 +25,22 @@ export async function ChannelEmoteManager(channels: I7tvUser[]): Promise<number>
 		}));
 
 		// Add emotes to redis
-		Bot.Logger.Debug(`${emotesListed.length} Emotes Loaded in ${username} (${id})`);
-		Bot.Redis.setEmotes(id, emotesListed);
+		Bot.Logger.Debug(`${emotesListed.length} Emotes Loaded in ${username} (${twitch_id})`);
+		Bot.Redis.setEmotes(twitch_id, emotesListed);
 
 		Bot.Logger.Warn(`Updating emotes for ${username}...`);
 		// Loop over emotes from 7tv
 		for (const emoteInfo of emote_set.emotes) {
-			const getEmote = await Bot.SQL.Query(`SELECT emote, emote_id FROM emotes WHERE twitch_id = $1 AND emote_id = $2`, [id, emoteInfo.id]);
+			const getEmote = await Bot.SQL.Query(`SELECT emote, emote_id FROM emotes WHERE twitch_id = $1 AND emote_id = $2`, [
+				twitch_id,
+				emoteInfo.id,
+			]);
 
 			const emoteAlias = emoteInfo.name === emoteInfo.data.name ? null : emoteInfo.name;
 
 			// If the emote is not in the db then add it
 			if (getEmote.rowCount === 0) {
-				Bot.SQL.NewEmote(id, username, { name: emoteInfo.data.name, alias: emoteAlias, id: emoteInfo.id });
+				Bot.SQL.NewEmote(twitch_id, username, { name: emoteInfo.data.name, alias: emoteAlias, id: emoteInfo.id });
 				continue;
 			}
 
@@ -52,7 +55,7 @@ export async function ChannelEmoteManager(channels: I7tvUser[]): Promise<number>
 				name: emoteName,
 				alias: emoteAlias,
 				id: emoteInfo.id,
-				channelId: id,
+				channelId: twitch_id,
 				channelName: username,
 			});
 		}

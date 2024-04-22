@@ -81,3 +81,33 @@ export interface StvRest {
 	};
 	error?: string;
 }
+
+export interface ListenMessage {
+	op: number;
+	t: number;
+	d: {
+		type: string;
+		condition: {
+			object_id: string;
+		};
+	};
+}
+
+export interface DispatchData {
+	type: string;
+	body: {
+		id: string;
+		pushed?: any;
+		pulled?: any;
+		updated?: any;
+		actor: {
+			id: string;
+			display_name: string;
+			username: string;
+			connections: {
+				platform: string;
+				id: string;
+			}[];
+		};
+	};
+}

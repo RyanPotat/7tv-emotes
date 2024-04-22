@@ -10,6 +10,7 @@ import { ChannelEmoteManager } from './manager/ChannelEmoteManager.js';
 import { Cronjob } from './utility/Cronjob.js';
 import { IVR } from './services/IVR.js';
 import { GetChannelsInfo } from './services/SevenTV.js';
+import { EventAPI } from './services/EventAPI.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const configPath = path.resolve(__dirname, 'config.json');
@@ -18,21 +19,12 @@ const configPath = path.resolve(__dirname, 'config.json');
 global.Bot = {};
 // @ts-ignore
 Bot.Config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
-// @ts-ignore
 Bot.Logger = Logger.New();
-// @ts-ignore
 Bot.Twitch = new ChatClient();
-// @ts-ignore
 Bot.Redis = RedisClient.New();
-// @ts-ignore
 Bot.WS = new WebsocketServer(Bot.Config.WS.port);
-// @ts-ignore
 Bot.Cronjob = Cronjob.New();
-/**
- * Disabled until i get gud
- * // @ts-ignore
- * Bot.EventAPI = EventAPI.New();
- */
+Bot.EventAPI = EventAPI.New();
 
 (async () => {
 	await Postgres.Setup();
@@ -81,11 +73,12 @@ Bot.Cronjob = Cronjob.New();
 		// When we start the bot we want to get all the 7tv information in case we missed anything from EventAPI
 		const channelsInfo = await GetChannelsInfo();
 
-
 		const count = await ChannelEmoteManager(channelsInfo);
 
 		const tookTime = performance.now() - perfomanceTime;
 		Bot.Logger.Log(`Emotes updated for ${count}/${channelsInfo.length} channels, took ${tookTime}ms`);
+
+		Bot.EventAPI.initialize();
 	};
 
 	await Init();

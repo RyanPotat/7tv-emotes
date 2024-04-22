@@ -10,25 +10,14 @@ export class EventAPI {
 	protected constructor() {
 		// Create Client
 		this.client = new WebSocket('wss://events.7tv.io/v3');
-	}
-
-	public static New(): EventAPI {
-		return this.instance ?? (this.instance = new this());
-	}
-
-	public async initialize(): Promise<void> {
-		const channels = await Bot.SQL.GetChannels();
-
-		const users = channels.map((c) => `user.update:${c.stv_id}`);
-		const sets = channels.map((c) => `emote_set.update:${c.current_stv_set}`);
-
-		const subs = new Set([...users, ...sets]);
-
-		this.subscribe([...subs]);
 
 		this.client.on('message', (data) => {
 			this.handleMessage(data.toString());
 		});
+	}
+
+	public static New(): EventAPI {
+		return this.instance ?? (this.instance = new this());
 	}
 
 	protected createListenMessage(topic: string): ListenMessage {
@@ -44,7 +33,7 @@ export class EventAPI {
 		};
 	}
 
-	protected subscribe(subs: string[]) {
+	subscribe(subs: string[]) {
 		for (const topic of subs) {
 			if (!this.activeTopics.has(topic)) {
 				const msg = this.createListenMessage(topic);
@@ -80,6 +69,7 @@ export class EventAPI {
 				const type = data.d.data.type;
 
 				this.activeTopics.add(`${type}:${objID}`);
+				Bot.Logger.Log(`Subscribed to event for ${type} ${objID}`);
 				break;
 			}
 			case EventAPIMessageTypes.UNSUBSCRIBE: {
@@ -178,10 +168,8 @@ export class EventAPI {
 					const stvId = data.body.id;
 					const newSetId = data.body.updated[0].value[1].value;
 
-					// Sub to new set if not already
-					if (!this.activeTopics.has(newSetId)) {
-						this.subscribe([`emote_set.update:${newSetId}`]);
-					}
+					// Sub to new set
+					this.subscribe([`emote_set.update:${newSetId}`]);
 
 					// Get emote info for the new current set
 					const stvChannel = await GetChannelGQL(stvId);

@@ -77,8 +77,6 @@ Bot.EventAPI = EventAPI.New();
 
 		const tookTime = performance.now() - perfomanceTime;
 		Bot.Logger.Log(`Emotes updated for ${count}/${channelsInfo.length} channels, took ${tookTime}ms`);
-
-		Bot.EventAPI.initialize();
 	};
 
 	await Init();

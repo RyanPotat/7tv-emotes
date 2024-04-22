@@ -18,6 +18,8 @@ export async function ChannelEmoteManager(channels: I7tvUser[]): Promise<number>
 			[emote_set.id, twitch_id],
 		);
 
+		Bot.EventAPI.subscribe([`emote_set.update:${emote_set.id}`, `user.update:${stv_id}`]);
+
 		const emotesListed = emote_set.emotes.map((emote: { name: string; id: string; data: { name: string } }) => ({
 			name: emote.data.name,
 			alias: emote.name,

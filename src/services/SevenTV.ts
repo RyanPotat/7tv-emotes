@@ -70,6 +70,8 @@ export async function GetChannelGQL(stv_id: string): Promise<I7tvUser | null> {
 }
 
 export const GetChannelsInfo = async (): Promise<I7tvUser[]> => {
+	Bot.Logger.Log('Getting 7tv channel info...');
+
 	const channels = await Bot.SQL.GetChannels();
 	const channelIds = channels.map((c) => c.stv_id);
 

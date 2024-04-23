@@ -46,6 +46,10 @@ Bot.EventAPI = EventAPI.New();
 		process.kill(process.pid, 'SIGUSR2');
 	});
 
+	process.on('uncaughtException', (err) => {
+		Bot.Logger.Error(`uncaughtException: ${err}`);
+	});
+
 	const joinChannels = async (): Promise<void> => {
 		for (const channelId of Bot.Config.Admins) {
 			try {
@@ -69,14 +73,15 @@ Bot.EventAPI = EventAPI.New();
 	const Init = async () => {
 		joinChannels();
 
-		const perfomanceTime: number = performance.now();
+		const gettingChannelInfo: number = performance.now();
 		// When we start the bot we want to get all the 7tv information in case we missed anything from EventAPI
 		const channelsInfo = await GetChannelsInfo();
+		Bot.Logger.Log(`Got channel info for ${channelsInfo.length} channels, took ${performance.now() - gettingChannelInfo}ms`);
 
+		const updatingChannels: number = performance.now();
+		// Use that info to update channels
 		const count = await ChannelEmoteManager(channelsInfo);
-
-		const tookTime = performance.now() - perfomanceTime;
-		Bot.Logger.Log(`Emotes updated for ${count}/${channelsInfo.length} channels, took ${tookTime}ms`);
+		Bot.Logger.Log(`Emotes updated for ${count}/${channelsInfo.length} channels, took ${performance.now() - updatingChannels}ms`);
 	};
 
 	await Init();

@@ -56,7 +56,7 @@ const consoleFormat = Winston.format.printf(({ level, message, timestamp, module
 			break;
 	}
 
-	return `[${timestamp}] ${emoji} ${upperLevel} ${module ? chalk.black.bgWhite(` ${module.toUpperCase()} `) + ' ' : ''}${message}`;
+	return `[${timestamp}] ${emoji} ${upperLevel} ${module ? chalk.black.bgWhite(` ${String(module).toUpperCase()} `) + ' ' : ''}${message}`;
 });
 
 const fileFormat = Winston.format.printf(({ level, message, timestamp, module }) => {

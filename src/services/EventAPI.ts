@@ -78,7 +78,7 @@ export class EventAPI {
 			}
 			case EventAPIMessageTypes.ERROR: {
 				// Errors
-				Bot.Logger.Error('7TV EventAPI:', data.d);
+				Bot.Logger.Error(`7TV EventAPI: ${JSON.stringify(data.d)}`);
 				break;
 			}
 			default: {

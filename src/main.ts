@@ -67,7 +67,7 @@ Bot.EventAPI = EventAPI.New();
 	};
 
 	const Init = async () => {
-		await joinChannels();
+		joinChannels();
 
 		const perfomanceTime: number = performance.now();
 		// When we start the bot we want to get all the 7tv information in case we missed anything from EventAPI

@@ -45,7 +45,7 @@ async function handleChannelEmotes(req: Request, res: Response) {
 	const [channelData, channelEmotes] = await Promise.all([
 		Bot.SQL.Query(`SELECT * FROM channels WHERE twitch_id = $1`, [data.id]),
 		Bot.SQL.Query(
-			`SELECT e.*, c.* 
+			`SELECT e.*
 			 FROM ( SELECT * FROM channels WHERE twitch_id = $1 ) AS c
 			 INNER JOIN emotes AS e
 			 ON e.emote_id = c.twitch_id

@@ -1,4 +1,4 @@
-import Express from 'express';
+import Express, { Request, Response } from 'express';
 import { Limiter } from '../../Middleware/RateLimit.js';
 import { IVR } from '../../../services/IVR.js';
 const Router = Express.Router();
@@ -11,29 +11,49 @@ type Emote = {
 	added: Date;
 };
 
-Router.get('/c/:username', Limiter(1000, 10), async (req, res) => {
-	let { username } = req.params;
-	const limit = req.query.limit || null;
+async function handleChannelEmotes(req: Request, res: Response) {
+	const username = req.params.username ?? (req.query.username as string);
 
-	const data = await IVR(username);
+	const limit = req.query.limit as string;
+	if (limit && Number.isNaN(parseInt(limit))) {
+		return res.status(400).json({
+			success: false,
+			message: 'Invalid limit parameter',
+		});
+	}
 
-	if (!data || !data.id) {
+	const order = req.query.order as string;
+	if (order && !['asc', 'desc'].includes(order.toLowerCase())) {
+		return res.status(400).json({
+			success: false,
+			message: 'Invalid order parameter',
+		});
+	}
+
+	let data: Record<any, any> | null = {};
+
+	if (req.query.id) data.id = req.query.id as string;
+	else data = await IVR(username);
+
+	if (!data?.id) {
 		return res.status(404).json({
 			success: false,
 			message: 'Channel not found',
 		});
 	}
 
-	const channelData = await Bot.SQL.Query(`SELECT * FROM channels WHERE twitch_id = $1`, [data.id]);
-	const channelEmotes = await Bot.SQL.Query(
-		`SELECT emotes.* 
-		FROM emotes 
-	    INNER JOIN channels 
-	    ON channels.twitch_id = emotes.twitch_id 
-	    WHERE channels.twitch_id = $1
-		ORDER BY emotes.emote_count DESC`,
-		[data.id],
-	);
+	const [channelData, channelEmotes] = await Promise.all([
+		Bot.SQL.Query(`SELECT * FROM channels WHERE twitch_id = $1`, [data.id]),
+		Bot.SQL.Query(
+			`SELECT e.*
+			 FROM ( SELECT * FROM channels WHERE twitch_id = $1 ) AS c
+			 INNER JOIN emotes AS e
+			 ON e.emote_id = c.twitch_id
+			 ORDER BY e.emote_count $2
+			 ${limit ? 'LIMIT $3' : ''}`,
+			[data.id, order.toUpperCase() ?? 'DESC', limit],
+		),
+	]);
 
 	if (channelEmotes.rowCount === 0 || channelData.rowCount === 0) {
 		return res.status(404).json({
@@ -56,13 +76,17 @@ Router.get('/c/:username', Limiter(1000, 10), async (req, res) => {
 		success: true,
 		channel: {
 			id: channelData.rows[0].twitch_id,
-			login: data.login,
+			/** @todo store usernames and auto update on an interval instead of IVR requests? */
+			login: !req.query.id ? data.login : null,
 			stvId: channelData.rows[0].stv_id,
 			since: channelData.rows[0].tracking_since,
 			tracking: channelData.rows[0].tracking,
 		},
-		emotes: limit === null ? emotes : emotes.slice(0, +limit),
+		emotes,
 	});
-});
+}
+
+Router.get('/c/:username', Limiter(1000, 10), handleChannelEmotes);
+Router.get('c', Limiter(1000, 10), handleChannelEmotes);
 
 export default Router;

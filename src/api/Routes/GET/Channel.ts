@@ -51,7 +51,7 @@ async function handleChannelEmotes(req: Request, res: Response) {
 			Bot.SQL.Query(
 				`SELECT e.*
 				 FROM ( SELECT * FROM channels WHERE twitch_id = $1 ) AS c
-				 INNER JOIN emotes AS e ON e.emote_id = c.twitch_id
+				 INNER JOIN emotes AS e ON e.twitch_id = c.twitch_id
 				 ORDER BY e.emote_count ${order ? order.toUpperCase() : 'DESC'}
 				 ${limit ? `LIMIT ${limit}` : ''}`,
 				[data.id],

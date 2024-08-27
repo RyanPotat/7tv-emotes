@@ -19,7 +19,7 @@ const LogLevelToEmoji: { [key: string]: string } = {
 };
 
 const consoleFormat = Winston.format.printf(({ level, message, timestamp, module }) => {
-	let upperLevel = ` ${String(module).toUpperCase()} ` as string;
+	let upperLevel = ` ${level.toUpperCase()} ` as string;
 	const emoji = LogLevelToEmoji[level];
 	switch (level) {
 		case LogLevel.SILLY:
@@ -60,7 +60,7 @@ const consoleFormat = Winston.format.printf(({ level, message, timestamp, module
 });
 
 const fileFormat = Winston.format.printf(({ level, message, timestamp, module }) => {
-	return `[${timestamp}] [${String(module).toUpperCase()}] ${module ? '[' + String(module).toUpperCase() + '] ' : ''}${message}`;
+	return `[${timestamp}] [${level.toUpperCase()}] ${module ? '[' + module.toUpperCase() + '] ' : ''}${message}`;
 });
 
 export class Logger {

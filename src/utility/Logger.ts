@@ -1,5 +1,7 @@
-import Winston from 'winston';
+import Winston, { format } from 'winston';
+const { combine, timestamp } = format;
 import chalk from 'chalk';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
 export enum LogLevel {
 	ERROR = 'error',
@@ -73,14 +75,28 @@ export class Logger {
 			format: Winston.format.combine(Winston.format.timestamp(), Winston.format.splat(), consoleFormat),
 			transports: [
 				new Winston.transports.Console(),
-				new Winston.transports.File({
-					filename: 'logs/error.log',
+				new DailyRotateFile({
+					filename: 'logs/%DATE%-error.log',
+					datePattern: 'YYYY-MM-DD',
+					zippedArchive: true,
 					level: 'error',
-					format: Winston.format.combine(Winston.format.timestamp(), Winston.format.splat(), fileFormat),
+					format: combine(
+						timestamp({
+							format: 'YYYY-MM-DD HH:mm:ss.SSS',
+						}),
+						fileFormat,
+					),
 				}),
-				new Winston.transports.File({
-					filename: 'logs/combined.log',
-					format: Winston.format.combine(Winston.format.timestamp(), Winston.format.splat(), fileFormat),
+				new DailyRotateFile({
+					filename: 'logs/%DATE%-combined.log',
+					datePattern: 'YYYY-MM-DD',
+					zippedArchive: true,
+					format: combine(
+						timestamp({
+							format: 'YYYY-MM-DD HH:mm:ss.SSS',
+						}),
+						fileFormat,
+					),
 				}),
 			],
 		});

@@ -1,6 +1,6 @@
 import pkg, { QueryResult } from 'pg';
 import type { NewEmote, UpdateEmote } from '../types/types.js';
-import type { I7tvUser, IChannel } from '../types/index.js';
+import type { IChannel } from '../types/index.js';
 
 interface IPool extends pkg.Pool {}
 

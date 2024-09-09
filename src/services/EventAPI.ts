@@ -47,7 +47,8 @@ export class EventAPI {
 
 		switch (data.op) {
 			case EventAPIMessageTypes.HELLO: {
-				// TODO: Connection acknowledgment
+				Bot.Logger.Log(`7TV Connected to EventAPI - session_id: ${data.d.session_id}`);
+				break;
 			}
 			case EventAPIMessageTypes.DISPATCH: {
 				// Dispatches

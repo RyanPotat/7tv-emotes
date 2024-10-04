@@ -31,10 +31,10 @@ export async function ChannelHandler(channel: string) {
 		await Bot.SQL.Query(
 			`
 			INSERT INTO channels 
-			(twitch_username, twitch_id, stv_id) 
-			VALUES ($1, $2, $3) 
+			(twitch_username, twitch_id, stv_id, current_stv_set) 
+			VALUES ($1, $2, $3, $4) 
 			ON CONFLICT DO NOTHING`,
-			[targetUser, data.id, StvId.user.id],
+			[targetUser, data.id, StvId.user.id, StvUser.emote_set.id],
 		);
 
 		for (const emote of StvUser.emote_set.emotes) {

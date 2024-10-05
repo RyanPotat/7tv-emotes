@@ -27,6 +27,7 @@ export async function ChannelHandler(channel: string) {
 		}));
 		if (emotesListed.length === 0) throw `7TV returned no emotes for ${targetUser} (${data.id})`;
 
+		await Bot.EventAPI.subscribe([`emote_set.update:${StvUser.emote_set.id}`, `user.update:${StvUser.stv_id}`]);
 		await Bot.Redis.setEmotes(data.id, emotesListed);
 		await Bot.SQL.Query(
 			`

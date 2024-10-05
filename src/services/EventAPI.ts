@@ -1,23 +1,40 @@
 import WebSocket from 'ws';
 import { GetChannelGQL } from './SevenTV.js';
-import { DispatchData, ListenMessage, RedisEmote } from '../types/index.js';
+import { Client, DispatchData, ListenMessage, RedisEmote } from '../types/index.js';
 
 export class EventAPI {
 	static instance: EventAPI;
-	private client: WebSocket;
+
+	public pool: Map<number, Client> = new Map();
+	private wsCount: number = 0;
+
 	public activeTopics: Set<string> = new Set();
 
-	protected constructor() {
-		// Create Client
-		this.client = new WebSocket('wss://events.7tv.io/v3');
-
-		this.client.on('message', (data) => {
-			this.handleMessage(data.toString());
-		});
-	}
+	public readonly maxSize = 400;
+	public readonly uri = 'wss://events.7tv.io/v3';
 
 	public static New(): EventAPI {
 		return this.instance ?? (this.instance = new this());
+	}
+
+	createClient(): Promise<Client> {
+		return new Promise((resolve) => {
+			const client: Client = {
+				ws: new WebSocket(this.uri),
+				topics: new Set(),
+				id: (this.wsCount += 1),
+			};
+
+			this.pool.set(client.id, client);
+
+			client.ws.on('message', (data) => {
+				this.handleMessage(data.toString());
+			});
+
+			client.ws.on('open', () => {
+				resolve(client);
+			});
+		});
 	}
 
 	protected createListenMessage(topic: string): ListenMessage {
@@ -33,11 +50,18 @@ export class EventAPI {
 		};
 	}
 
-	subscribe(subs: string[]) {
+	async subscribe(subs: string[]) {
 		for (const topic of subs) {
+			let client = Array.from(this.pool.values()).find((c: Client) => c.topics.size < this.maxSize);
+
+			if (!client) {
+				client = await this.createClient();
+			}
+
 			if (!this.activeTopics.has(topic)) {
 				const msg = this.createListenMessage(topic);
-				this.client.send(JSON.stringify(msg));
+				client.ws.send(JSON.stringify(msg));
+				client.topics.add(topic);
 			}
 		}
 	}

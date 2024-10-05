@@ -1,3 +1,5 @@
+import WebSocket from 'ws';
+
 export interface IChannels {
 	result: I7tvUser[];
 	length: number;
@@ -110,4 +112,10 @@ export interface DispatchData {
 			}[];
 		};
 	};
+}
+
+export interface Client {
+	ws: WebSocket;
+	id: number;
+	topics: Set<string>;
 }

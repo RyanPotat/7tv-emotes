@@ -66,11 +66,14 @@ export class EventAPI {
 			}
 			case EventAPIMessageTypes.ACK: {
 				// Acknowledge subscriptions
-				const objID = data.d.data.condition.object_id || data.d.data.condition.id;
-				const type = data.d.data.type;
+				if (data.d.command === 'SUBSCRIBE') {
+					const objID = data.d.data.condition.object_id || data.d.data.condition.id;
+					const type = data.d.data.type;
 
-				this.activeTopics.add(`${type}:${objID}`);
-				Bot.Logger.Log(`Subscribed to event for ${type} ${objID}`);
+					this.activeTopics.add(`${type}:${objID}`);
+					Bot.Logger.Log(`Subscribed to event for ${type} ${objID}`);
+				}
+
 				break;
 			}
 			case EventAPIMessageTypes.UNSUBSCRIBE: {

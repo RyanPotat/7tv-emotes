@@ -6,12 +6,9 @@ declare global {
 		Twitch: import('../services/TwitchClient').ChatClient;
 		SQL: import('../database/Postgres').Postgres;
 		Redis: import('../database/Redis').RedisClient;
-		Logger: import('./utils/Logger').Logger;
-		/**
-		 * EventAPI: import("./services/EventAPI").EventAPI;
-		 * I'll probably need to rewrite this, i've tried EventAPI in the past and it just seems a better option to use REST
-		 */
-		WS: import('./services/Websocket').Websocket;
+		Logger: import('../utility/Logger').Logger;
+		EventAPI: import('../services/EventAPI').EventAPI;
+		WS: import('../manager/WebSocketManager').WebsocketServer;
 		Cronjob: import('../utility/Cronjob').Cronjob;
 	};
 }

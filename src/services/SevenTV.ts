@@ -1,9 +1,9 @@
 import fetch from 'node-fetch';
-import type { IEmoteSet, UserData, StvRest } from '../types/index.js';
+import type { I7tvUser, UserData, StvRest } from '../types/index.js';
 
 const GQL = 'https://7tv.io/v3/gql';
 
-export async function GetChannelsGQL(channelIds: string): Promise<IEmoteSet | null> {
+export async function GetChannelGQL(stv_id: string): Promise<I7tvUser | null> {
 	try {
 		const { data, errors } = (await fetch(GQL, {
 			method: 'POST',
@@ -43,16 +43,15 @@ export async function GetChannelsGQL(channelIds: string): Promise<IEmoteSet | nu
 					}
 				  }`,
 				variables: {
-					id: channelIds,
+					id: stv_id,
 				},
 			}),
 		}).then((res) => res.json())) as UserData;
 
-		if (errors || !data) return null;
-
-		if (channelIds !== data.user.id) return null;
+		if (errors || !data || stv_id !== data.user.id) return null;
 
 		const { emote_sets, connections } = data.user;
+
 		const findTwitch = connections.find((connection: { platform: string }) => connection.platform === 'TWITCH');
 		if (!findTwitch) return null;
 
@@ -60,40 +59,44 @@ export async function GetChannelsGQL(channelIds: string): Promise<IEmoteSet | nu
 		if (!findEmoteSet) return null;
 
 		return {
-			id: findTwitch.id,
+			stv_id,
+			twitch_id: findTwitch.id,
 			username: findTwitch.username,
-			emote_sets: findEmoteSet,
+			emote_set: findEmoteSet,
 		};
 	} catch (e) {
 		return null;
 	}
 }
 
-export const GetChannels = async (channelIds: string[]): Promise<IEmoteSet[]> => {
-	const promise: Promise<IEmoteSet | null>[] = [];
+export const GetChannelsInfo = async (): Promise<I7tvUser[]> => {
+	Bot.Logger.Log('Getting 7tv channel info...');
 
-	if (!channelIds.length) return [];
+	const channels = await Bot.SQL.GetChannels();
+	const channelIds = channels.map((c) => c.stv_id);
 
-	for (const channelId of channelIds) {
-		// @ts-ignore;
-		promise.push(GetChannelsGQL(channelId));
+	const requests: Promise<I7tvUser | null>[] = [];
+
+	for (const channelId of channelIds ?? []) {
+		requests.push(GetChannelGQL(channelId));
 		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 
-	const results = await Promise.all(promise);
-	const filtered = results.filter((result) => result !== null) as IEmoteSet[];
+	const results = (await Promise.all(requests)).filter(Boolean) as I7tvUser[];
 
-	return filtered;
+	return results;
 };
 
-export const GetStvId = async (channelId: string): Promise<StvRest | null> => {
+export const GetStvId = async (channelId: string): Promise<StvRest> => {
 	try {
 		const data = (await fetch(`https://7tv.io/v3/users/twitch/${channelId}`, {
 			method: 'GET',
 		}).then((res) => res.json())) as StvRest;
-		if (!data || data.error) return null;
+
+		if (!data || data.error) throw new Error(`Failed to find ${channelId} in 7TV`);
+
 		return data;
 	} catch (e) {
-		return null;
+		throw new Error(`Failed to find ${channelId} in 7TV`);
 	}
 };

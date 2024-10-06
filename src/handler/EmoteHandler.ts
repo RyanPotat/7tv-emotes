@@ -1,7 +1,7 @@
 import type { PrivmsgMessage } from '@kararty/dank-twitch-irc';
 
 export async function EmoteHandler(msg: PrivmsgMessage): Promise<void> {
-	const get = (await Bot.Redis.getArray(`emotes:${msg.channelID}`)) ?? [];
+	const get = (await Bot.Redis.getEmotes(msg.channelID)) ?? [];
 	const emotesUsedByNames: Record<string, [string, string, number]> = {};
 
 	msg.messageText.split(/\s/g).forEach((word) => {

@@ -9,6 +9,8 @@ import { WebsocketServer } from './manager/WebSocketManager.js';
 import { ChannelEmoteManager } from './manager/ChannelEmoteManager.js';
 import { Cronjob } from './utility/Cronjob.js';
 import { IVR } from './services/IVR.js';
+import { GetChannelsInfo } from './services/SevenTV.js';
+import { EventAPI } from './services/EventAPI.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const configPath = path.resolve(__dirname, 'config.json');
@@ -17,21 +19,12 @@ const configPath = path.resolve(__dirname, 'config.json');
 global.Bot = {};
 // @ts-ignore
 Bot.Config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
-// @ts-ignore
 Bot.Logger = Logger.New();
-// @ts-ignore
 Bot.Twitch = new ChatClient();
-// @ts-ignore
 Bot.Redis = RedisClient.New();
-// @ts-ignore
 Bot.WS = new WebsocketServer(Bot.Config.WS.port);
-// @ts-ignore
 Bot.Cronjob = Cronjob.New();
-/**
- * Disabled until i get gud
- * // @ts-ignore
- * Bot.EventAPI = EventAPI.New();
- */
+Bot.EventAPI = EventAPI.New();
 
 (async () => {
 	await Postgres.Setup();
@@ -53,7 +46,11 @@ Bot.Cronjob = Cronjob.New();
 		process.kill(process.pid, 'SIGUSR2');
 	});
 
-	async function Init() {
+	process.on('uncaughtException', (err) => {
+		Bot.Logger.Error(`uncaughtException: ${err}`);
+	});
+
+	const joinChannels = async (): Promise<void> => {
 		for (const channelId of Bot.Config.Admins) {
 			try {
 				const data = await IVR(channelId, true);
@@ -63,16 +60,32 @@ Bot.Cronjob = Cronjob.New();
 			}
 		}
 
-		const { result, length } = await Bot.SQL.GetChannelsArray();
-		let perfomanceTime: number = performance.now();
-		let { count } = await ChannelEmoteManager(result);
+		const channels = await Bot.SQL.GetChannels();
+		for (const channel of channels) {
+			try {
+				Bot.Twitch.Join(channel.twitch_username);
+			} catch (e) {
+				Bot.Logger.Error(`Failed to join channel.login: ${channel}`);
+			}
+		}
+	};
 
-		let tookTime = performance.now() - perfomanceTime;
-		Bot.Logger.Log(`Emotes updated for ${count}/${length} channels, took ${tookTime}ms`);
-	}
+	const Init = async () => {
+		joinChannels();
+
+		const gettingChannelInfo: number = performance.now();
+		// When we start the bot we want to get all the 7tv information in case we missed anything from EventAPI
+		const channelsInfo = await GetChannelsInfo();
+		Bot.Logger.Log(`Got channel info for ${channelsInfo.length} channels, took ${performance.now() - gettingChannelInfo}ms`);
+
+		const updatingChannels: number = performance.now();
+		// Use that info to update channels
+		const count = await ChannelEmoteManager(channelsInfo);
+		Bot.Logger.Log(`Emotes updated for ${count}/${channelsInfo.length} channels, took ${performance.now() - updatingChannels}ms`);
+	};
 
 	await Init();
 	Bot.Cronjob.Schedule('*/30 * * * *', async () => {
-		await Init();
+		joinChannels();
 	});
 })();

@@ -39,7 +39,3 @@ export type UpdateEmote = {
 	channelId: string;
 	channelName: string;
 };
-
-export type IChannels = {
-	count: number;
-};

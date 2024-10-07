@@ -127,7 +127,7 @@ export class Postgres {
 		for (const chunk of chunks) {
 			const gqlRequests: Promise<string | null>[] = [];
 			for (const channel of chunk) {
-				gqlRequests.push(this.UpdateChannelAndGet(channel.twitch_id, channel.twitch_username));
+				gqlRequests.push(this.UpdateAndGetChannel(channel.twitch_id, channel.twitch_username));
 			}
 
 			// Using 'as' here because without it I get a very weird ts error and I cba
@@ -145,7 +145,7 @@ export class Postgres {
 	 * @param channel User's twitch username according to the database
 	 * @returns User's current twitch username
 	 */
-	async UpdateChannelAndGet(id: string, oldUsername: string): Promise<string | null> {
+	async UpdateAndGetChannel(id: string, oldUsername: string): Promise<string | null> {
 		const currentUsername = await GetUserLogin(id);
 
 		if (currentUsername && currentUsername !== oldUsername) {

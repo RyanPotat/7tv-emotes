@@ -1,6 +1,7 @@
 import pkg, { QueryResult } from 'pg';
 import type { NewEmote, UpdateEmote } from '../types/types.js';
 import type { IChannel } from '../types/index.js';
+import { GetUserLogin } from '../services/TwtichGQL.js';
 
 interface IPool extends pkg.Pool {}
 
@@ -108,5 +109,27 @@ export class Postgres {
 	async GetChannels(): Promise<IChannel[]> {
 		const Channels = await this.Query('SELECT * FROM channels');
 		return Channels.rows;
+	}
+	/**
+	 *
+	 * @param id User's twitch id
+	 * @param channel User's twitch username according to the database
+	 * @returns User's current twitch username
+	 */
+	async UpdateChannelAndGet(id: string, oldUsername: string): Promise<string | null> {
+		const currentUsername = await GetUserLogin(id);
+
+		if (currentUsername && currentUsername !== oldUsername) {
+			Bot.SQL.Query(
+				`UPDATE channels
+				SET twitch_username = $2
+				WHERE twitch_username = $1`,
+				[oldUsername, currentUsername],
+			);
+
+			Bot.Logger.Log(`Updated username ${oldUsername} -> ${currentUsername}`);
+		}
+
+		return currentUsername;
 	}
 }

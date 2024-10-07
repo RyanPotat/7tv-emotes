@@ -110,6 +110,35 @@ export class Postgres {
 		const Channels = await this.Query('SELECT * FROM channels');
 		return Channels.rows;
 	}
+
+	async GetChannelsToJoin(): Promise<string[]> {
+		const channels = await this.GetChannels();
+
+		const chunks = [];
+		let i = 0;
+		const chunkLength = 500;
+
+		while (i < channels.length) {
+			chunks.push(channels.slice(i, (i += chunkLength)));
+		}
+
+		const payload: string[] = [];
+
+		for (const chunk of chunks) {
+			const gqlRequests: Promise<string | null>[] = [];
+			for (const channel of chunk) {
+				gqlRequests.push(this.UpdateChannelAndGet(channel.twitch_id, channel.twitch_username));
+			}
+
+			// Using 'as' here because without it I get a very weird ts error and I cba
+			const results = (await Promise.all(gqlRequests)).filter((x) => x !== null) as string[];
+
+			payload.push(...results);
+		}
+
+		return payload;
+	}
+
 	/**
 	 *
 	 * @param id User's twitch id

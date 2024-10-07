@@ -85,7 +85,7 @@ Bot.EventAPI = EventAPI.New();
 	};
 
 	await Init();
-	Bot.Cronjob.Schedule('*/30 * * * *', async () => {
+	Bot.Cronjob.Schedule('0 */2 * * *', async () => {
 		joinChannels();
 	});
 })();

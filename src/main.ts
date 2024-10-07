@@ -60,10 +60,10 @@ Bot.EventAPI = EventAPI.New();
 			}
 		}
 
-		const channels = await Bot.SQL.GetChannels();
+		const channels = await Bot.SQL.GetChannelsToJoin();
 		for (const channel of channels) {
 			try {
-				Bot.Twitch.Join(channel.twitch_username);
+				Bot.Twitch.Join(channel);
 			} catch (e) {
 				Bot.Logger.Error(`Failed to join channel.login: ${channel}`);
 			}
@@ -85,7 +85,7 @@ Bot.EventAPI = EventAPI.New();
 	};
 
 	await Init();
-	Bot.Cronjob.Schedule('*/30 * * * *', async () => {
+	Bot.Cronjob.Schedule('0 */2 * * *', async () => {
 		joinChannels();
 	});
 })();

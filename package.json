@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon -e ts --ignore src/**/*.ts --exec \"yarn start\"",
-    "start": "tsc && rm -rf build/ && tsc && node .",
+    "start": "tsc && rm -rf build/ && tsc && cp config.json ./build/config.json && node .",
     "format": "prettier --write src/**/*.{ts,js}"
   },
   "devDependencies": {

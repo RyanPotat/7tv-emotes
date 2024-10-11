@@ -9,24 +9,23 @@ import { WebsocketServer } from './manager/WebSocketManager.js';
 import { ChannelEmoteManager } from './manager/ChannelEmoteManager.js';
 import { Cronjob } from './utility/Cronjob.js';
 import { IVR } from './services/IVR.js';
+import { EmoteHandler } from './handler/EmoteHandler.js';
+import { GlobalClasses } from './types/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const configPath = path.resolve(__dirname, 'config.json');
 
-// @ts-ignore
-global.Bot = {};
-// @ts-ignore
+let Bot = global.Bot = {} as GlobalClasses;
+
+// @ts-expect-error CBA to fix top level await in tsconfig
 Bot.Config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
-// @ts-ignore
 Bot.Logger = Logger.New();
-// @ts-ignore
 Bot.Twitch = new ChatClient();
-// @ts-ignore
 Bot.Redis = RedisClient.New();
-// @ts-ignore
 Bot.WS = new WebsocketServer(Bot.Config.WS.port);
-// @ts-ignore
 Bot.Cronjob = Cronjob.New();
+Bot.EmoteHandler = EmoteHandler.New();
+
 /**
  * Disabled until i get gud
  * // @ts-ignore
@@ -35,7 +34,7 @@ Bot.Cronjob = Cronjob.New();
 
 (async () => {
 	await Postgres.Setup();
-	// @ts-ignore
+
 	Bot.SQL = Postgres.New();
 	await Bot.SQL.CreateTables();
 

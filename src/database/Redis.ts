@@ -39,11 +39,11 @@ export class RedisClient {
 		return value;
 	}
 
-	async getArray(key: string): Promise<any[] | null> {
+	async getArray(key: string): Promise<any[] | never[]> {
 		const value = await this._client.get(key);
-		if (!value) return null;
+		if (!value) return [];
 
-		return JSON.parse(value);
+		return JSON.parse(value) ?? [];
 	}
 
 	async getKeys(pattern: string): Promise<string[]> {

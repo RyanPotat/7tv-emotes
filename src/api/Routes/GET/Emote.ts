@@ -49,7 +49,7 @@ Router.get('/e/:emote', Limiter(1000, 10), async (req, res) => {
 			name: emoteData.rows[0].emote,
 			totalCount: channels.reduce((a: number, b: { count: number }) => a + b.count, 0),
 		},
-		channels: limit == null ? channels : channels.slice(0, limit),
+		channels: limit === null ? channels : channels.slice(0, +limit),
 	});
 });
 

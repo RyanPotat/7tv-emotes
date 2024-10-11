@@ -1,7 +1,7 @@
-import pkg from 'pg';
-import { GetChannels } from '../services/SevenTV.js';
+import pkg, { QueryResult } from 'pg';
 import type { NewEmote, UpdateEmote } from '../types/types.js';
-import type { IEmote, IChannels } from '../types/index.js';
+import type { IChannel } from '../types/index.js';
+import { GetUserLogin } from '../services/TwtichGQL.js';
 
 interface IPool extends pkg.Pool {}
 
@@ -27,7 +27,7 @@ export class Postgres {
 		return this._instance;
 	}
 
-	async Query(query: string, values?: any[]): Promise<any> {
+	async Query(query: string, values?: any[]): Promise<QueryResult<any>> {
 		return this._pool.query(query, values);
 	}
 
@@ -64,6 +64,7 @@ export class Postgres {
 			twitch_username TEXT NOT NULL,
 			twitch_id VARCHAR(30) NOT NULL UNIQUE,
 			stv_id VARCHAR(30) NOT NULL UNIQUE,
+			current_stv_set VARCHAR(30) NOT NULL UNIQUE,
 			tracking_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 			tracking BOOLEAN DEFAULT TRUE NOT NULL
 		)`);
@@ -83,7 +84,8 @@ export class Postgres {
 	async NewEmote(twitch_id: string, twitch_name: string, emote: NewEmote): Promise<void> {
 		await this.Query(
 			`INSERT INTO emotes (twitch_id, emote, emote_alias, emote_id) 
-			 VALUES ($1, $2, $3, $4)`,
+			 VALUES ($1, $2, $3, $4)
+			 ON CONFLICT DO NOTHING`,
 			[twitch_id, emote.name, emote.alias, emote.id],
 		);
 
@@ -100,54 +102,63 @@ export class Postgres {
 			[channelId, name, alias, id],
 		);
 
-		if (dbName != name) Bot.Logger.Debug(`Emote name changed ${dbName} -> ${name} in ${channelName}`);
-		if (dbAlias != alias) Bot.Logger.Debug(`Emote alias changed ${dbAlias} -> ${alias} in ${channelName}`);
+		if (dbName !== name) Bot.Logger.Debug(`Emote name changed ${dbName} -> ${name} in ${channelName}`);
+		if (dbAlias !== alias) Bot.Logger.Debug(`Emote alias changed ${dbAlias} -> ${alias} in ${channelName}`);
 	}
 
-	async EmoteLooper(emoteList: IEmote[], twitch_id: string, twitch_username: string): Promise<void> {
-		Bot.Logger.Warn(`Updating emotes for ${twitch_username}...`);
+	async GetChannels(): Promise<IChannel[]> {
+		const Channels = await this.Query('SELECT * FROM channels');
+		return Channels.rows;
+	}
 
-		for (const emoteInfo of emoteList) {
-			const getEmote = await Bot.SQL.Query(`SELECT emote, emote_id FROM emotes WHERE twitch_id = $1 AND emote_id = $2`, [
-				twitch_id,
-				emoteInfo.id,
-			]);
+	async GetChannelsToJoin(): Promise<string[]> {
+		const channels = await this.GetChannels();
 
-			const emoteAlias = emoteInfo.name == emoteInfo.data.name ? null : emoteInfo.name;
+		const chunks = [];
+		let i = 0;
+		const chunkLength = 500;
 
-			if (getEmote.rowCount === 0) {
-				await this.NewEmote(twitch_id, twitch_username, { name: emoteInfo.data.name, alias: emoteAlias, id: emoteInfo.id });
-				continue;
-			}
-
-			const { emote, emote_alias, emote_id } = getEmote.rows[0];
-			const emoteName = emoteInfo.data.name == '*UnknownEmote' ? emote : emoteInfo.data.name;
-			if (emote === emoteName && emote_alias === emoteAlias && emote_id === emoteInfo.id) continue;
-
-			const Payload = {
-				dbName: emote,
-				dbAlias: emote_alias,
-				name: emoteName,
-				alias: emoteAlias,
-				id: emoteInfo.id,
-				channelId: twitch_id,
-				channelName: twitch_username,
-			};
-
-			await this.UpdateEmote(Payload);
+		while (i < channels.length) {
+			chunks.push(channels.slice(i, (i += chunkLength)));
 		}
 
-		Bot.Logger.Log(`Updated emotes for ${twitch_username}`);
+		const payload: string[] = [];
+
+		for (const chunk of chunks) {
+			const gqlRequests: Promise<string | null>[] = [];
+			for (const channel of chunk) {
+				gqlRequests.push(this.UpdateAndGetChannel(channel.twitch_id, channel.twitch_username));
+			}
+
+			// Using 'as' here because without it I get a very weird ts error and I cba
+			const results = (await Promise.all(gqlRequests)).filter((x) => x !== null) as string[];
+
+			payload.push(...results);
+		}
+
+		return payload;
 	}
 
-	async GetChannelsArray(): Promise<IChannels> {
-		const Channels = await this.Query('SELECT array_agg(stv_id) as stv_ids FROM channels');
-		const { stv_ids } = Channels?.rows[0];
-		const result = await GetChannels(stv_ids ?? []);
+	/**
+	 *
+	 * @param id User's twitch id
+	 * @param channel User's twitch username according to the database
+	 * @returns User's current twitch username
+	 */
+	async UpdateAndGetChannel(id: string, oldUsername: string): Promise<string | null> {
+		const currentUsername = await GetUserLogin(id);
 
-		return {
-			result,
-			length: stv_ids?.length ?? 0,
-		};
+		if (currentUsername && currentUsername !== oldUsername) {
+			Bot.SQL.Query(
+				`UPDATE channels
+				SET twitch_username = $2
+				WHERE twitch_username = $1`,
+				[oldUsername, currentUsername],
+			);
+
+			Bot.Logger.Log(`Updated username ${oldUsername} -> ${currentUsername}`);
+		}
+
+		return currentUsername;
 	}
 }

@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { RedisEmote } from '../types';
 
 export class RedisClient {
 	private static _instance: RedisClient;
@@ -28,8 +29,8 @@ export class RedisClient {
 		await this._client.set(key, value);
 	}
 
-	async setArray(key: string, value: any[]): Promise<void> {
-		await this._client.set(key, JSON.stringify(value));
+	async setEmotes(channelId: string, emotes: RedisEmote[]): Promise<void> {
+		await this._client.set(`emotes:${channelId}`, JSON.stringify(emotes));
 	}
 
 	async get(key: string): Promise<string | null> {

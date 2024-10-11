@@ -13,7 +13,7 @@ type Emote = {
 
 async function handleChannelEmotes(req: Request, res: Response) {
 	try {
-		const username = req.params.username ?? req.query.username as string;
+		const username = req.params.username ?? (req.query.username as string);
 
 		const limit = req.query.limit as string;
 		if (limit && Number.isNaN(parseInt(limit))) {
@@ -22,7 +22,7 @@ async function handleChannelEmotes(req: Request, res: Response) {
 				message: 'Invalid limit parameter',
 			});
 		}
-		
+    
 		const order = req.query.order as string;
 		if (order && !['asc', 'desc'].includes(order.toLowerCase())) {
 			return res.status(400).json({
@@ -33,8 +33,11 @@ async function handleChannelEmotes(req: Request, res: Response) {
 
 		let data: Record<any, any> | null = {};
 
-		if (req.query.id) data.id = req.query.id as string;
-		else data = await IVR(username);
+		if (req.query.id) {
+			data.id = req.query.id as string;
+		} else {
+			data = await IVR(username);
+		}
 
 		if (!data?.id) {
 			return res.status(404).json({
@@ -50,12 +53,12 @@ async function handleChannelEmotes(req: Request, res: Response) {
 				 FROM ( SELECT * FROM channels WHERE twitch_id = $1 ) AS c
 				 INNER JOIN emotes AS e ON e.twitch_id = c.twitch_id
 				 ORDER BY e.emote_count ${order ? order.toUpperCase() : 'DESC'}
-				 ${limit ? `LIMIT ${limit}` : ''}`, 
-				[data.id]
+				 ${limit ? `LIMIT ${limit}` : ''}`,
+				[data.id],
 			),
-		])
+		]);
 
-		if (!channelEmotes.rows.length || !channelData.rows.length) {
+		if (channelEmotes.rowCount === 0 || channelData.rowCount === 0) {
 			return res.status(404).json({
 				success: false,
 				message: 'No emotes found for this channel',

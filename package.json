@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon -e ts --ignore src/**/*.ts --exec \"yarn start\"",
-    "start": "tsc && rm -rf build/ && tsc && cp config.json ./build/config.json && node .",
+    "start": "tsc && node .",
     "format": "prettier --write src/**/*.{ts,js}"
   },
   "devDependencies": {
@@ -15,13 +15,13 @@
     "@types/morgan": "^1.9.4",
     "@types/node-cron": "^3.0.7",
     "@types/pg": "^8.6.6",
-    "@types/ws": "^8.5.4",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.3",
     "typescript": "^4.9.3"
   },
   "dependencies": {
     "@kararty/dank-twitch-irc": "4.6.0",
+    "@types/ws": "^8.5.10",
     "chalk": "^5.2.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
@@ -34,6 +34,8 @@
     "pg": "^8.9.0",
     "reflect-metadata": "^0.1.13",
     "tsyringe": "^4.7.0",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.16.0"
   }
 }

@@ -1,4 +1,4 @@
-import WebSocket from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 
 interface IMessage {
 	type: string;
@@ -14,7 +14,7 @@ export class WebsocketServer {
 	private timer: number = 1000 * 30;
 
 	constructor(port: number) {
-		const WSS = new WebSocket.Server({ port });
+		const WSS = new WebSocketServer({ port });
 		Bot.Logger.Log(`Websocket listening on port ${port}`);
 
 		WSS.on('connection', (web: WebSocket, req: any) => {

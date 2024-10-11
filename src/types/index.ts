@@ -1,17 +1,30 @@
+import WebSocket from 'ws';
+
 export interface IChannels {
-	result: IEmoteSet[];
+	result: I7tvUser[];
 	length: number;
 }
 
-export interface IEmoteSet {
-	id: string;
+export interface I7tvUser {
+	stv_id: string;
+	twitch_id: string;
 	username: string;
-	emote_sets: {
+	emote_set: {
 		id: string;
 		name: string;
 		capacity: number;
 		emotes: IEmote[];
 	};
+}
+
+export interface IChannel {
+	id: number;
+	twitch_username: string;
+	twitch_id: string;
+	stv_id: string;
+	tracking_since: Date;
+	tracking: boolean;
+	current_stv_set: string;
 }
 
 export interface IEmote {
@@ -21,6 +34,12 @@ export interface IEmote {
 		name: string;
 		listed: boolean;
 	};
+}
+
+export interface RedisEmote {
+	name: string;
+	alias: string;
+	id: string;
 }
 
 export interface UserData {
@@ -63,4 +82,40 @@ export interface StvRest {
 		id: string;
 	};
 	error?: string;
+}
+
+export interface ListenMessage {
+	op: number;
+	t: number;
+	d: {
+		type: string;
+		condition: {
+			object_id: string;
+		};
+	};
+}
+
+export interface DispatchData {
+	type: string;
+	body: {
+		id: string;
+		pushed?: any;
+		pulled?: any;
+		updated?: any;
+		actor: {
+			id: string;
+			display_name: string;
+			username: string;
+			connections: {
+				platform: string;
+				id: string;
+			}[];
+		};
+	};
+}
+
+export interface Client {
+	ws: WebSocket;
+	id: number;
+	topics: Set<string>;
 }

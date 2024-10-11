@@ -1,5 +1,7 @@
-import Winston from 'winston';
+import Winston, { format } from 'winston';
+const { combine, timestamp } = format;
 import chalk from 'chalk';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
 export enum LogLevel {
 	ERROR = 'error',
@@ -56,7 +58,7 @@ const consoleFormat = Winston.format.printf(({ level, message, timestamp, module
 			break;
 	}
 
-	return `[${timestamp}] ${emoji} ${upperLevel} ${module ? chalk.black.bgWhite(` ${module.toUpperCase()} `) + ' ' : ''}${message}`;
+	return `[${timestamp}] ${emoji} ${upperLevel} ${module ? chalk.black.bgWhite(` ${String(module).toUpperCase()} `) + ' ' : ''}${message}`;
 });
 
 const fileFormat = Winston.format.printf(({ level, message, timestamp, module }) => {
@@ -73,14 +75,28 @@ export class Logger {
 			format: Winston.format.combine(Winston.format.timestamp(), Winston.format.splat(), consoleFormat),
 			transports: [
 				new Winston.transports.Console(),
-				new Winston.transports.File({
-					filename: 'logs/error.log',
+				new DailyRotateFile({
+					filename: 'logs/%DATE%-error.log',
+					datePattern: 'YYYY-MM-DD',
+					zippedArchive: true,
 					level: 'error',
-					format: Winston.format.combine(Winston.format.timestamp(), Winston.format.splat(), fileFormat),
+					format: combine(
+						timestamp({
+							format: 'YYYY-MM-DD HH:mm:ss.SSS',
+						}),
+						fileFormat,
+					),
 				}),
-				new Winston.transports.File({
-					filename: 'logs/combined.log',
-					format: Winston.format.combine(Winston.format.timestamp(), Winston.format.splat(), fileFormat),
+				new DailyRotateFile({
+					filename: 'logs/%DATE%-combined.log',
+					datePattern: 'YYYY-MM-DD',
+					zippedArchive: true,
+					format: combine(
+						timestamp({
+							format: 'YYYY-MM-DD HH:mm:ss.SSS',
+						}),
+						fileFormat,
+					),
 				}),
 			],
 		});
@@ -103,8 +119,8 @@ export class Logger {
 		this.winstonLogger.log(LogLevel.DEBUG, message, { module });
 	}
 
-	Error(message: string, module?: string) {
-		this.winstonLogger.log(LogLevel.ERROR, message, { module });
+	Error(message: string | Error, module?: string) {
+		this.winstonLogger.log(LogLevel.ERROR, String(message), { module });
 	}
 
 	Warn(message: string, module?: string) {

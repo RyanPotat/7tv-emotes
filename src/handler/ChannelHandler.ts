@@ -1,5 +1,5 @@
 import { IVR } from '../services/IVR.js';
-import { GetChannelsGQL, GetStvId } from '../services/SevenTV.js';
+import { GetChannelGQL, GetStvId } from '../services/SevenTV.js';
 
 const ParseUser = (user: string): string => {
 	const parsed = user.replace(/[@#,]/g, ''); // Remove @, #, and ,
@@ -13,32 +13,33 @@ export async function ChannelHandler(channel: string) {
 		if (!data || !data.id) throw `Failed to find ${targetUser} in IVR`;
 
 		const StvId = await GetStvId(data.id);
-		if (!StvId) throw `Failed to find ${targetUser} in 7TV`;
 
-		const Emotes = await GetChannelsGQL(StvId.user.id);
-		if (!Emotes?.emote_sets) throw `Failed to find ${targetUser} in 7TV Emotes`;
+		const StvUser = await GetChannelGQL(StvId.user.id);
+		if (!StvUser?.emote_set) throw `Failed to find ${targetUser} in 7TV Emotes`;
 
 		const doesChannelExist = await Bot.SQL.Query(`SELECT * FROM channels WHERE twitch_id = $1`, [data.id]);
 		if (doesChannelExist.rowCount > 0) throw `Channel ${targetUser} already exists in the database`;
-		const emotesListed = Emotes.emote_sets.emotes.map((emote: { name: string; id: string; data: { name: string } }) => ({
+
+		const emotesListed = StvUser.emote_set.emotes.map((emote: { name: string; id: string; data: { name: string } }) => ({
 			name: emote.data.name,
 			alias: emote.name,
 			id: emote.id,
 		}));
 		if (emotesListed.length === 0) throw `7TV returned no emotes for ${targetUser} (${data.id})`;
 
-		await Bot.Redis.setArray(`emotes:${data.id}`, emotesListed);
+		await Bot.EventAPI.subscribe([`emote_set.update:${StvUser.emote_set.id}`, `user.update:${StvUser.stv_id}`]);
+		await Bot.Redis.setEmotes(data.id, emotesListed);
 		await Bot.SQL.Query(
 			`
 			INSERT INTO channels 
-			(twitch_username, twitch_id, stv_id) 
-			VALUES ($1, $2, $3) 
+			(twitch_username, twitch_id, stv_id, current_stv_set) 
+			VALUES ($1, $2, $3, $4) 
 			ON CONFLICT DO NOTHING`,
-			[targetUser, data.id, StvId.user.id],
+			[targetUser, data.id, StvId.user.id, StvUser.emote_set.id],
 		);
 
-		for (const emote of Emotes.emote_sets.emotes) {
-			const emoteAlias = emote.name == emote.data.name ? null : emote.name;
+		for (const emote of StvUser.emote_set.emotes) {
+			const emoteAlias = emote.name === emote.data.name ? null : emote.name;
 			await Bot.SQL.Query(
 				`
 				INSERT INTO emotes 
@@ -53,7 +54,7 @@ export async function ChannelHandler(channel: string) {
 		Bot.Twitch.Join(targetUser);
 		Bot.Logger.Log(`Added ${targetUser} to the database`);
 	} catch (error) {
-		Bot.Logger.Error(error);
+		Bot.Logger.Error(String(error));
 		throw error;
 	}
 }

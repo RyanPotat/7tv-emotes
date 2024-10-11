@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ChatClient as TwitchIRC } from '@kararty/dank-twitch-irc';
+import { JoinRateLimiter, ChatClient as TwitchIRC } from '@kararty/dank-twitch-irc';
 import { singleton } from 'tsyringe';
 import { CommandHandler } from '../handler/CommandHandler.js';
 
@@ -12,8 +12,6 @@ export class ChatClient extends TwitchIRC {
 			rateLimits: 'verifiedBot',
 			ignoreUnhandledPromiseRejections: true,
 		});
-
-		this.connect();
 
 		this.on('error', (err) => {
 			Bot.Logger.Error(err);
@@ -45,6 +43,10 @@ export class ChatClient extends TwitchIRC {
 			Bot.EmoteHandler.handleEmote(msg);
 			CommandHandler(msg);
 		});
+
+		this.use(new JoinRateLimiter(this));
+
+		this.connect();
 	}
 
 	Join(channel: string): void {

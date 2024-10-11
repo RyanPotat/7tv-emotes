@@ -26,7 +26,7 @@ export class EmoteHandler {
 	}
 
 	public async handleEmote(msg: PrivmsgMessage): Promise<void> {
-		const get = await Bot.Redis.getArray(`emotes:${msg.channelID}`);
+		const get = await Bot.Redis.getEmotes(msg.channelID);
 		const emoteNameMap: Map<string, [string, string, number]> = new Map();
 	
 		for (const word of msg.messageText.split(' ')) {

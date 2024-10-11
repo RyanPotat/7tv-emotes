@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import { ChatClient as TwitchIRC } from '@kararty/dank-twitch-irc';
 import { singleton } from 'tsyringe';
-import { EmoteHandler } from '../handler/EmoteHandler.js';
 import { CommandHandler } from '../handler/CommandHandler.js';
 
 @singleton()
@@ -43,7 +42,7 @@ export class ChatClient extends TwitchIRC {
 		});
 
 		this.on('PRIVMSG', (msg) => {
-			EmoteHandler(msg);
+			Bot.EmoteHandler.handleEmote(msg);
 			CommandHandler(msg);
 		});
 	}

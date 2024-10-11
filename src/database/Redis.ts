@@ -40,11 +40,11 @@ export class RedisClient {
 		return value;
 	}
 
-	async getEmotes(channelId: string): Promise<RedisEmote[] | null> {
-		const value = await this._client.get(`emotes:${channelId}`);
-		if (!value) return null;
+	async getArray(key: string): Promise<any[] | never[]> {
+		const value = await this._client.get(key);
+		if (!value) return [];
 
-		return JSON.parse(value);
+		return JSON.parse(value) ?? [];
 	}
 
 	async getKeys(pattern: string): Promise<string[]> {
